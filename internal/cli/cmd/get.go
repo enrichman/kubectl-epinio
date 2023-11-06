@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/enrichman/kubectl-epinio/internal/cli"
 	"github.com/spf13/cobra"
 )
 
-func NewGetCmd() *cobra.Command {
+func NewGetCmd(cli *cli.EpinioCLI) *cobra.Command {
 	getCmd := &cobra.Command{
 		Use: "get",
 		RunE: func(c *cobra.Command, args []string) error {
@@ -13,17 +14,18 @@ func NewGetCmd() *cobra.Command {
 	}
 
 	getCmd.AddCommand(
-		NewGetUserCmd(),
+		NewGetUserCmd(cli),
 	)
 
 	return getCmd
 }
 
-func NewGetUserCmd() *cobra.Command {
+func NewGetUserCmd(cli *cli.EpinioCLI) *cobra.Command {
 	return &cobra.Command{
-		Use: "user",
+		Use:     "user",
+		Aliases: []string{"users"},
 		RunE: func(c *cobra.Command, args []string) error {
-			return nil
+			return cli.Get("")
 		},
 	}
 }

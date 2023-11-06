@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/enrichman/kubectl-epinio/internal/cmd"
+	"github.com/enrichman/kubectl-epinio/internal/cli/cmd"
 	"github.com/spf13/pflag"
 
 	"k8s.io/cli-runtime/pkg/genericiooptions"
@@ -19,7 +19,11 @@ func main() {
 		ErrOut: os.Stderr,
 	}
 
-	epinioCmd := cmd.NewEpinioCmd(streams)
+	epinioCmd, err := cmd.NewRootCmd(streams)
+	if err != nil {
+		os.Exit(1)
+	}
+
 	if err := epinioCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

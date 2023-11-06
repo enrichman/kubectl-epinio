@@ -21,32 +21,19 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/cli-runtime/pkg/genericiooptions"
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewCreateUserCmd(streams genericiooptions.IOStreams) *cobra.Command {
-	options := &EpinioOptions{
-		configFlags: genericclioptions.NewConfigFlags(true),
-		IOStreams:   streams,
-	}
+func NewCreateUserCmd(kubeClient kubernetes.Interface, opts *EpinioOptions) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:          "secret",
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, args []string) error {
-			config, err := options.configFlags.ToRESTConfig()
-			if err != nil {
-				return err
-			}
 
-			kubeClient, err := kubernetes.NewForConfig(config)
-			if err != nil {
-				return err
-			}
+			c.InOrStdin()
 
-			username, err := ask("Username: ", streams.In)
+			username, err := ask("Username: ", opts.In)
 			if err != nil {
 				return err
 			}
@@ -61,7 +48,7 @@ func NewCreateUserCmd(streams genericiooptions.IOStreams) *cobra.Command {
 				return err
 			}
 
-			workspaces, err := ask("Workspaces (space or comma separated): ", streams.In)
+			workspaces, err := ask("Workspaces (space or comma separated): ", opts.In)
 			if err != nil {
 				return err
 			}
@@ -77,7 +64,7 @@ func NewCreateUserCmd(streams genericiooptions.IOStreams) *cobra.Command {
 					return err
 				}
 
-				yesNo, err := ask("User already exists. Do you want to update it? [y/n] ", streams.In)
+				yesNo, err := ask("User already exists. Do you want to update it? [y/n] ", opts.In)
 				if err != nil {
 					return err
 				}
@@ -98,8 +85,6 @@ func NewCreateUserCmd(streams genericiooptions.IOStreams) *cobra.Command {
 			return nil
 		},
 	}
-
-	options.configFlags.AddFlags(cmd.Flags())
 
 	return cmd
 }
