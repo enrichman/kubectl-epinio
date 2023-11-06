@@ -20,11 +20,13 @@ func NewEpinioCLI(kubeClient kubernetes.Interface) (e *EpinioCLI) {
 	}
 }
 
-func (e *EpinioCLI) Get(ctx context.Context, username string) error {
+func (e *EpinioCLI) GetUsers(ctx context.Context, usernames []string) error {
 	users, err := e.KubeClient.ListUsers(ctx)
 	if err != nil {
 		return err
 	}
+
+	users = filterUsers(usernames, users)
 
 	fmt.Println("USERNAME")
 	for _, u := range users {
@@ -34,19 +36,42 @@ func (e *EpinioCLI) Get(ctx context.Context, username string) error {
 	return nil
 }
 
-func (e *EpinioCLI) Describe(ctx context.Context, username string) error {
+func (e *EpinioCLI) DescribeUsers(ctx context.Context, usernames []string) error {
 	users, err := e.KubeClient.ListUsers(ctx)
 	if err != nil {
 		return err
 	}
 
+	users = filterUsers(usernames, users)
+
 	format := "%-10s %s\n"
 
-	for _, u := range users {
+	for i, u := range users {
+		if i != 0 {
+			fmt.Println()
+		}
 		fmt.Printf(format, "Username:", u.Username)
 		fmt.Printf(format, "Password:", u.Password)
-		fmt.Println()
 	}
 
 	return nil
+}
+
+func filterUsers(usernames []string, users []epinio.User) []epinio.User {
+	if len(usernames) == 0 {
+		return users
+	}
+
+	usernamesMap := map[string]struct{}{}
+	for _, u := range usernames {
+		usernamesMap[u] = struct{}{}
+	}
+
+	filtered := []epinio.User{}
+	for _, user := range users {
+		if _, found := usernamesMap[user.Username]; found {
+			filtered = append(filtered, user)
+		}
+	}
+	return filtered
 }

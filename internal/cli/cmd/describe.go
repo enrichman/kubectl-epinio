@@ -25,7 +25,8 @@ func NewDescribeUserCmd(cli *cli.EpinioCLI) *cobra.Command {
 		Use:     "user",
 		Aliases: []string{"users"},
 		RunE: func(c *cobra.Command, args []string) error {
-			return cli.Get(c.Context(), args[0])
+			usernames := args
+			return cli.DescribeUsers(c.Context(), usernames)
 		},
 	}
 }
