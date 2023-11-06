@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"bufio"
@@ -26,7 +26,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewCmdCreateUser(streams genericiooptions.IOStreams) *cobra.Command {
+func NewCreateUserCmd(streams genericiooptions.IOStreams) *cobra.Command {
 	options := &EpinioOptions{
 		configFlags: genericclioptions.NewConfigFlags(true),
 		IOStreams:   streams,
