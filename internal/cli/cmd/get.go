@@ -25,7 +25,7 @@ func NewGetUserCmd(cli *cli.EpinioCLI) *cobra.Command {
 		Use:     "user",
 		Aliases: []string{"users"},
 		RunE: func(c *cobra.Command, args []string) error {
-			return cli.Get("")
+			return cli.Get(c.Context(), "")
 		},
 	}
 }

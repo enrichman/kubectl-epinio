@@ -8,12 +8,20 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func ListUsers(ctx context.Context, kubeClient kubernetes.Interface) ([]User, error) {
+type KubeClient struct {
+	kubernetes.Interface
+}
+
+func NewKubeClient(kubeClient kubernetes.Interface) (k *KubeClient) {
+	return &KubeClient{kubeClient}
+}
+
+func (k *KubeClient) ListUsers(ctx context.Context) ([]User, error) {
 	userSelector := labels.Set(map[string]string{
 		"epinio.io/api-user-credentials": "true",
 	}).AsSelector()
 
-	secretClient := kubeClient.CoreV1().Secrets("epinio")
+	secretClient := k.CoreV1().Secrets("epinio")
 	secretList, err := secretClient.List(ctx, v1.ListOptions{LabelSelector: userSelector.String()})
 	if err != nil {
 		return nil, err

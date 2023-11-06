@@ -10,17 +10,18 @@ import (
 
 // EpinioCLI handles the CLI commands, calling the Kubernetes API and handling the display
 type EpinioCLI struct {
-	KubeClient kubernetes.Interface
+	KubeClient *epinio.KubeClient
+	//TODO: add output and logs
 }
 
 func NewEpinioCLI(kubeClient kubernetes.Interface) (e *EpinioCLI) {
 	return &EpinioCLI{
-		KubeClient: kubeClient,
+		KubeClient: epinio.NewKubeClient(kubeClient),
 	}
 }
 
-func (e *EpinioCLI) Get(username string) error {
-	users, err := epinio.ListUsers(context.Background(), e.KubeClient)
+func (e *EpinioCLI) Get(ctx context.Context, username string) error {
+	users, err := e.KubeClient.ListUsers(ctx)
 	if err != nil {
 		return err
 	}
@@ -33,15 +34,17 @@ func (e *EpinioCLI) Get(username string) error {
 	return nil
 }
 
-func (e *EpinioCLI) Describe(username string) error {
-	users, err := epinio.ListUsers(context.Background(), e.KubeClient)
+func (e *EpinioCLI) Describe(ctx context.Context, username string) error {
+	users, err := e.KubeClient.ListUsers(ctx)
 	if err != nil {
 		return err
 	}
 
+	format := "%-10s %s\n"
+
 	for _, u := range users {
-		fmt.Printf("%-10s %s\n", "Username:", u.Username)
-		fmt.Printf("%-10s %s\n", "Password:", u.Password)
+		fmt.Printf(format, "Username:", u.Username)
+		fmt.Printf(format, "Password:", u.Password)
 		fmt.Println()
 	}
 
