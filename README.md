@@ -3,3 +3,4 @@
 
 # kubectl-epinio
 
+[![CI](https://github.com/enrichman/kubectl-epinio/actions/workflows/main.yml/badge.svg)](https://github.com/enrichman/kubectl-epinio/actions/workflows/main.yml)
