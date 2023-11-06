@@ -51,7 +51,14 @@ func NewCmdEpinio(streams genericiooptions.IOStreams) *cobra.Command {
 			}
 
 			discoveryClient, err := options.configFlags.ToDiscoveryClient()
-			discoveryClient.ServerVersion()
+			if err != nil {
+				return err
+			}
+
+			_, err = discoveryClient.ServerVersion()
+			if err != nil {
+				return err
+			}
 
 			version, err := getServerVersion(config)
 			if err != nil {
