@@ -1,0 +1,17 @@
+# Edit the user below. Lines beginning with a '#' will be ignored
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.  //TODO: not true, we should check this.
+#
+# The 'password' field can be provided in a plain value. It will be hashed automatically for you.
+#
+username : {{ .Username }}
+password:
+role: {{ .Role }}
+roles:
+{{- range $role := .Roles }}
+  - {{ $role }}
+{{- end }}
+namespaces:
+{{- range $ns := .Namespaces }}
+  - {{ $ns }}
+{{- end }}

@@ -2,10 +2,14 @@ package epinio
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"strings"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -40,18 +44,58 @@ func (k *KubeClient) ListUsers(ctx context.Context) ([]User, error) {
 	}).AsSelector()
 
 	secretClient := k.kube.CoreV1().Secrets("epinio")
-	secretList, err := secretClient.List(ctx, v1.ListOptions{LabelSelector: userSelector.String()})
+	secretList, err := secretClient.List(ctx, metav1.ListOptions{LabelSelector: userSelector.String()})
 	if err != nil {
 		return nil, err
 	}
 
 	users := []User{}
 	for _, sec := range secretList.Items {
-		users = append(users, User{
+		user := User{
 			Username: string(sec.Data["username"]),
 			Password: string(sec.Data["password"]),
-		})
+			Role:     sec.Labels["epinio.io/role"],
+
+			secret: sec.Name,
+		}
+
+		namespacesAll := string(sec.Data["namespaces"])
+		namespacesAll = strings.TrimSpace(namespacesAll)
+		if namespacesAll != "" {
+			namespaces := strings.Split(namespacesAll, "\n")
+			user.Namespaces = namespaces
+		}
+
+		rolesAll := strings.TrimSpace(sec.Annotations["epinio.io/roles"])
+		if rolesAll != "" {
+			roles := strings.Split(rolesAll, "\n")
+			user.Namespaces = roles
+		}
+
+		users = append(users, user)
 	}
 
 	return users, nil
+}
+
+func (k *KubeClient) PatchUser(ctx context.Context, user User) error {
+	patchSecretData := map[string][]byte{}
+
+	if len(user.Namespaces) > 0 {
+		nsData := strings.Join(user.Namespaces, "\n")
+		patchSecretData["namespaces"] = []byte(nsData)
+	}
+
+	patch, err := json.Marshal(v1.Secret{Data: patchSecretData})
+	if err != nil {
+		return err
+	}
+
+	secretClient := k.kube.CoreV1().Secrets("epinio")
+	_, err = secretClient.Patch(ctx, user.secret, types.StrategicMergePatchType, patch, metav1.PatchOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

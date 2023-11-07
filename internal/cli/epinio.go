@@ -10,6 +10,8 @@ import (
 	_ "embed"
 )
 
+const format = "%-15s %s\n"
+
 // EpinioCLI handles the CLI commands, calling the Kubernetes API and handling the display
 type EpinioCLI struct {
 	KubeClient *epinio.KubeClient
@@ -46,7 +48,7 @@ func (e *EpinioCLI) DescribeUsers(ctx context.Context, usernames []string) error
 
 	users = filterUsers(usernames, users)
 
-	format := "%-10s %s\n"
+	format := "%-15s %s\n"
 
 	for i, u := range users {
 		if i != 0 {
@@ -54,6 +56,8 @@ func (e *EpinioCLI) DescribeUsers(ctx context.Context, usernames []string) error
 		}
 		fmt.Printf(format, "Username:", u.Username)
 		fmt.Printf(format, "Password:", u.Password)
+		printArray("Roles:", u.Roles)
+		printArray("Namespaces:", u.Namespaces)
 	}
 
 	return nil
@@ -76,4 +80,18 @@ func filterUsers(usernames []string, users []epinio.User) []epinio.User {
 		}
 	}
 	return filtered
+}
+
+func printArray(description string, arr []string) {
+	if len(arr) == 0 {
+		fmt.Printf(format, description, "")
+	}
+
+	for i, ns := range arr {
+		var leftCol string
+		if i == 0 {
+			leftCol = description
+		}
+		fmt.Printf(format, leftCol, ns)
+	}
 }

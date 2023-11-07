@@ -14,7 +14,7 @@ import (
 	_ "embed"
 )
 
-//go:embed template/edit_user.yaml
+//go:embed template/edit_user.yaml.tmpl
 var editUserTemplate string
 
 func (e *EpinioCLI) EditUser(ctx context.Context, username string) error {
@@ -39,15 +39,13 @@ func (e *EpinioCLI) EditUser(ctx context.Context, username string) error {
 		return err
 	}
 
-	updatedUser := &epinio.User{}
-	err = yaml.NewDecoder(tempFile).Decode(updatedUser)
+	updatedUser := epinio.NewUser(user.SecretName())
+	err = yaml.NewDecoder(tempFile).Decode(&updatedUser)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("updated", updatedUser)
-
-	return nil
+	return e.KubeClient.PatchUser(ctx, updatedUser)
 }
 
 func createEditUserTempFile(user epinio.User) (*os.File, error) {

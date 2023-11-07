@@ -1,5 +1,0 @@
-# Edit the user
-username : {{ .Username }}
-# If you want to edit the password provides the plain value.
-# It will be hashed automatically for you
-password: ######
