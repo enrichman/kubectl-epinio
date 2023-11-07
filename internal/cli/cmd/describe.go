@@ -22,8 +22,9 @@ func NewDescribeCmd(cli *cli.EpinioCLI) *cobra.Command {
 
 func NewDescribeUserCmd(cli *cli.EpinioCLI) *cobra.Command {
 	return &cobra.Command{
-		Use:     "user",
-		Aliases: []string{"users"},
+		Use:               "user",
+		Aliases:           []string{"users"},
+		ValidArgsFunction: NewUserValidator(cli),
 		RunE: func(c *cobra.Command, args []string) error {
 			usernames := args
 			return cli.DescribeUsers(c.Context(), usernames)
