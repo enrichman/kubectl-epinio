@@ -2,47 +2,45 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
 
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
-      with:
-        version: v1.54
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54
 
-    - name: Build
-      run: make build
+      - name: Build
+        run: make build
 
-    - name: Provision k3d Cluster
-      uses: AbsaOSS/k3d-action@v2
-      with:
-        cluster-name: "epinio"
-        args: >-
-          --image docker.io/rancher/k3s:v1.28.2-k3s1
+      - name: Provision k3d Cluster
+        uses: AbsaOSS/k3d-action@v2
+        with: cluster-name: "epinio"
+          args: >-
+            --image docker.io/rancher/k3s:v1.28.2-k3s1
 
-    - name: Set up test infra
-      run: make infra-setup
+      - name: Set up test infra
+        run: make infra-setup
 
-    - name: Test
-      run: make test
+      - name: Test
+        run: make test
 
-    - name: Tear down test infra
-      run: make infra-teardown
+      - name: Tear down test infra
+        run: make infra-teardown
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
