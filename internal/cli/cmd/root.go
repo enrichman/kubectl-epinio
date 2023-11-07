@@ -29,7 +29,7 @@ func NewRootCmd(streams genericiooptions.IOStreams) (*cobra.Command, error) {
 		return nil, err
 	}
 
-	epinioClient := cli.NewEpinioCLI(kubeClient)
+	epinioCLI := cli.NewEpinioCLI(kubeClient)
 
 	rootCmd := &cobra.Command{
 		Use:          "epinio",
@@ -39,8 +39,9 @@ func NewRootCmd(streams genericiooptions.IOStreams) (*cobra.Command, error) {
 
 	rootCmd.AddCommand(
 		NewVersionCmd(kubeClient),
-		NewGetCmd(epinioClient),
-		NewDescribeCmd(epinioClient),
+		NewGetCmd(epinioCLI),
+		NewDescribeCmd(epinioCLI),
+		NewEditCmd(epinioCLI),
 		NewCreateUserCmd(kubeClient, options),
 	)
 

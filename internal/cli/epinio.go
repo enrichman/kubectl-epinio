@@ -6,6 +6,8 @@ import (
 
 	"github.com/enrichman/kubectl-epinio/pkg/epinio"
 	"k8s.io/client-go/kubernetes"
+
+	_ "embed"
 )
 
 // EpinioCLI handles the CLI commands, calling the Kubernetes API and handling the display

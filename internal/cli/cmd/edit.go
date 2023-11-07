@@ -5,26 +5,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewGetCmd(cli *cli.EpinioCLI) *cobra.Command {
-	getCmd := &cobra.Command{
-		Use: "get",
+func NewEditCmd(cli *cli.EpinioCLI) *cobra.Command {
+	editCmd := &cobra.Command{
+		Use: "edit",
 	}
 
-	getCmd.AddCommand(
-		NewGetUserCmd(cli),
+	editCmd.AddCommand(
+		NewEditUserCmd(cli),
 	)
 
-	return getCmd
+	return editCmd
 }
 
-func NewGetUserCmd(cli *cli.EpinioCLI) *cobra.Command {
+func NewEditUserCmd(cli *cli.EpinioCLI) *cobra.Command {
 	return &cobra.Command{
 		Use:               "user",
 		Aliases:           []string{"users"},
 		ValidArgsFunction: NewUserValidator(cli),
+		Args:              cobra.ExactArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
-			usernames := args
-			return cli.GetUsers(c.Context(), usernames)
+			return cli.EditUser(c.Context(), args[0])
 		},
 	}
 }
