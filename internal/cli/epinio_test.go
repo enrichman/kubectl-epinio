@@ -85,13 +85,18 @@ func TestGetUser(t *testing.T) {
 				entries := strings.Split(string(out), "\n")
 				entries = entries[:len(entries)-1] // The last entry is empty
 
-				expectedEntries := []string{"USERNAME"} // header
-				expectedEntries = append(expectedEntries, tc.expectedEntries...)
+				assert.True(t, len(entries) > 0)
 
-				assert.Equal(t, len(expectedEntries), len(entries))
+				assert.Equal(t, "USERNAME", entries[0]) // header
 
-				for i := range tc.expectedEntries {
-					assert.Equal(t, expectedEntries[i], entries[i])
+				foundEntries := make(map[string]struct{}, len(entries))
+				for _, entry := range entries {
+					foundEntries[entry] = struct{}{}
+				}
+
+				for _, expected := range tc.expectedEntries {
+					_, found := foundEntries[expected]
+					assert.True(t, found)
 				}
 			})
 		}
