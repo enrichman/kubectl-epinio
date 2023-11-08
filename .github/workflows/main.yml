@@ -34,13 +34,13 @@ jobs:
           --image docker.io/rancher/k3s:v1.28.2-k3s1
 
     - name: Set up test infra
-      run: ./tests/set_up_cluster.sh
+      run: make infra-setup
 
     - name: Test
       run: make test
 
     - name: Tear down test infra
-      run: k3d cluster delete epinio
+      run: make infra-teardown
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3

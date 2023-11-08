@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euxo pipefail
+set -uxo pipefail
 
 cluster_name=${1-epinio}
 namespace=${2-epinio}
