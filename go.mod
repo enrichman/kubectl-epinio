@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/spf13/cobra v1.8.0
+	github.com/stretchr/testify v1.8.4
 	k8s.io/cli-runtime v0.28.3
 	k8s.io/client-go v0.28.3
 )
@@ -11,6 +12,7 @@ require (
 require (
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	gopkg.in/evanphx/json-patch.v5 v5.7.0 // indirect
 )
