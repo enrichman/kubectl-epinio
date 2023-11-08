@@ -11,6 +11,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/enrichman/kubectl-epinio/pkg/epinio/internal/names"
 )
 
 var ErrUserNotFound error = errors.New("user not found")
@@ -93,6 +95,39 @@ func (k *KubeClient) PatchUser(ctx context.Context, user User) error {
 
 	secretClient := k.kube.CoreV1().Secrets("epinio")
 	_, err = secretClient.Patch(ctx, user.secret, types.StrategicMergePatchType, patch, metav1.PatchOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k *KubeClient) CreateUser(ctx context.Context, user User) error {
+	createSecretData := map[string][]byte{}
+
+	createSecretData["username"] = []byte(user.Username)
+
+	if user.Password != "" {
+		createSecretData["password"] = []byte(user.Password)
+	}
+
+	if len(user.Namespaces) > 0 {
+		nsData := strings.Join(user.Namespaces, "\n")
+		createSecretData["namespaces"] = []byte(nsData)
+	}
+
+	userSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: names.GenerateResourceName("ruser", user.Username),
+			Labels: map[string]string{
+				"epinio.io/api-user-credentials": "true",
+			},
+		},
+		Data: createSecretData,
+	}
+
+	secretClient := k.kube.CoreV1().Secrets("epinio")
+	_, err := secretClient.Create(ctx, userSecret, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
