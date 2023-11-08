@@ -24,7 +24,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewCreateUserCmd(kubeClient kubernetes.Interface, opts *EpinioOptions) *cobra.Command {
+func NewCreateUserCmd2(kubeClient kubernetes.Interface, opts *EpinioOptions) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:          "secret",

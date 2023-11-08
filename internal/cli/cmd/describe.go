@@ -7,7 +7,8 @@ import (
 
 func NewDescribeCmd(cli *cli.EpinioCLI) *cobra.Command {
 	describeCmd := &cobra.Command{
-		Use: "describe",
+		Use:   "describe",
+		Short: "describe something",
 		RunE: func(c *cobra.Command, args []string) error {
 			return nil
 		},
