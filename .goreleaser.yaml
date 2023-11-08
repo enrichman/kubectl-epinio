@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
 version: 1
 
+project_name: kubectl-epinio
 before:
   hooks:
     - make test
@@ -13,10 +13,13 @@ builds:
     goos:
       - linux
       - darwin
+      - windows
     goarch:
       - amd64
       - arm64
       - arm
+    goarm:
+      - "7"
     ldflags: 
       - "-X github.com/enrichman/kubectl-epinio/internal/cmd.Version={{.Version}}"
 
@@ -25,7 +28,7 @@ archives:
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
-      {{- title .Os }}_
+      {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
@@ -35,7 +38,7 @@ archives:
       - goos: windows
         format: zip
 checksum:
-  name_template: "{{ .ProjectName }}_{{ .Tag }}_SHA256SUMS"
+  name_template: "{{ .ProjectName }}_{{ .Tag }}.sha256"
   algorithm: sha256
 dist: output
 changelog:
