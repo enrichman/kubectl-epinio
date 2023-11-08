@@ -1,0 +1,39 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: epinio
+spec:
+  version: v0.0.1
+  homepage: https://github.com/enrichman/kubectl-epinio
+  shortDescription: "TODO complete"
+  description: |
+    TODO complete
+  platforms:
+    - bin: epinio
+      selector:
+        matchLabels:
+          os: linux
+          arch: arm64
+      uri: https://github.com/Tashima42/kubectl-epinio/releases/download/v0.0.1/kubectl-epinio_Linux_arm64.tar.gz
+      sha256: 6b828315c4ccb4c7f1dea6d4223274e4e24eb24c2991d9db895576be8cd823fb
+    - bin: epinio
+      selector:
+        matchLabels:
+          os: linux
+          arch: amd64
+      uri: https://github.com/Tashima42/kubectl-epinio/releases/download/v0.0.1/kubectl-epinio_Darwin_x86_64.tar.gz
+      sha256: b9c47a09fae54de42cf1ac35c433b485eaf3007d421a833f430abb54d4b95b1c
+    - bin: epinio
+      selector:
+        matchLabels:
+          os: darwin
+          arch: arm64
+      uri: https://github.com/Tashima42/kubectl-epinio/releases/download/v0.0.1/kubectl-epinio_Darwin_x86_64.tar.gz
+      sha256: a2ae6632a3979bd8a01fd22d88353f36605e7a71544aa89f01c1bccffd64dc30
+    - bin: epinio
+      selector:
+        matchLabels:
+          os: darwin
+          arch: amd64
+      uri: https://github.com/Tashima42/kubectl-epinio/releases/download/v0.0.1/kubectl-epinio_Darwin_x86_64.tar.gz
+      sha256: 9506b175df648f6167e642b6f08db3413004d23887a96b17e6d458fc669439a8
