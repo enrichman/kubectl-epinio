@@ -1,6 +1,7 @@
 
 VERSION ?= $(shell git describe --tags --always)
 export LDFLAGS += -X github.com/enrichman/kubectl-epinio/internal/cmd.Version=$(VERSION)
+export GOCOVERDIR=$(shell pwd)/output/coverage
 
 build:
 	go build -v -ldflags '$(LDFLAGS)' -o output/ ./...
@@ -15,7 +16,15 @@ lint:
 	golangci-lint run
 
 build-test-bin:
-	go build -v -ldflags '$(LDFLAGS)' -cover -o output/ ./...
+	go build -v -ldflags '$(LDFLAGS)' -cover -covermode=atomic -coverpkg ./... -o output/
 
-test:
-	go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+test: test-unit test-integration
+
+test-unit: build
+	go test $(shell go list ./... | grep -v /tests) -v -race -covermode=atomic -coverprofile=coverage.out -coverpkg ./...
+
+test-integration: build-test-bin
+	mkdir -p ${GOCOVERDIR} && rm -rf ${GOCOVERDIR}/*
+	go test -v ./tests
+	go tool covdata percent -i=output/coverage
+	go tool covdata textfmt -i=output/coverage -o coverprofile.out
