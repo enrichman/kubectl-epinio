@@ -24,7 +24,7 @@ jobs:
         version: v1.54
 
     - name: Build
-      run: go build -v ./...
+      run: make build
 
     - name: Provision k3d Cluster
       uses: AbsaOSS/k3d-action@v2
@@ -37,7 +37,7 @@ jobs:
       run: ./tests/set_up_cluster.sh
 
     - name: Test
-      run: go test -v ./...
+      run: make test
 
     - name: Tear down test infra
       run: k3d cluster delete epinio
