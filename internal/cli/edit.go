@@ -29,8 +29,7 @@ func (e *EpinioCLI) EditUser(ctx context.Context, username string) error {
 	}
 	defer os.Remove(tempFile.Name())
 
-	err = openEditor(tempFile)
-	if err != nil {
+	if err = openEditor(tempFile); err != nil {
 		return err
 	}
 
