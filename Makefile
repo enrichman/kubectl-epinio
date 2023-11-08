@@ -21,10 +21,10 @@ build-test-bin:
 test: test-unit test-integration
 
 test-unit: build
-	go test $(shell go list ./... | grep -v /tests) -v -race -covermode=atomic -coverprofile=coverage.out -coverpkg ./...
+	go test $(shell go list ./... | grep -v /tests) -v -race -covermode=atomic -coverprofile=coverage-unit.out -coverpkg ./...
 
 test-integration: build-test-bin
 	mkdir -p ${GOCOVERDIR} && rm -rf ${GOCOVERDIR}/*
 	go test -v ./tests
 	go tool covdata percent -i=output/coverage
-	go tool covdata textfmt -i=output/coverage -o coverprofile.out
+	go tool covdata textfmt -i=output/coverage -o coverage-integration.out
