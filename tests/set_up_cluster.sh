@@ -5,7 +5,12 @@ set -euxo pipefail
 cluster_name=${1-epinio}
 namespace=${2-epinio}
 
-k3d cluster create $cluster_name -p '8080:80@loadbalancer' -p '8443:443@loadbalancer' --wait
+k3d cluster list $cluster_name &>/dev/null
+if [ $? -eq 1 ]; then # cluster does not exist
+	k3d cluster create $cluster_name -p '8080:80@loadbalancer' -p '8443:443@loadbalancer' --wait
+else
+	echo "Cluster $cluster_name already exists. Skipping creation..."
+fi
 
 # Ingress controller setup is not necessary, as k3d installs Traefik
 
