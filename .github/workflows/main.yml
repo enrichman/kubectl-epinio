@@ -24,7 +24,7 @@ jobs:
         version: v1.54
 
     - name: Build
-      run: make build
+      run: make build-test-bin
 
     - name: Provision k3d Cluster
       uses: AbsaOSS/k3d-action@v2

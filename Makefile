@@ -14,5 +14,8 @@ infra-teardown:
 lint:
 	golangci-lint run
 
+build-test-bin:
+	go build -v -ldflags '$(LDFLAGS)' -cover -o output/ ./...
+
 test:
 	go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
