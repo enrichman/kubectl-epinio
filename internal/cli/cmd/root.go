@@ -43,7 +43,6 @@ func NewRootCmd(streams genericiooptions.IOStreams) (*cobra.Command, error) {
 		NewDescribeCmd(epinioCLI),
 		NewEditCmd(epinioCLI),
 		NewCreateCmd(epinioCLI),
-		//NewCreateUserCmd(kubeClient, options),
 	)
 
 	options.configFlags.AddFlags(rootCmd.Flags())
