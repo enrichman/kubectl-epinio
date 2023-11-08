@@ -24,7 +24,7 @@ jobs:
         version: v1.54
 
     - name: Build
-      run: make build
+      run: make build-test-bin
 
     - name: Provision k3d Cluster
       uses: AbsaOSS/k3d-action@v2
@@ -42,7 +42,22 @@ jobs:
     - name: Tear down test infra
       run: make infra-teardown
 
-    - name: Upload coverage reports to Codecov
+    - name: Upload integration tests coverage reports to Codecov
       uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage-integration.out
+        flags: integration
+        verbose: true
+        fail_ci_if_error: true
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Upload unit tests coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage-unit.out
+        flags: unit
+        verbose: true
+        fail_ci_if_error: true
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
