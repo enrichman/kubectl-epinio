@@ -6,7 +6,7 @@ build:
 	go build -v -ldflags '$(LDFLAGS)' -o output/ ./...
 
 infra-setup:
-	./tests/set_up_cluster.sh
+	./tests/setup_cluster.sh
 
 infra-teardown:
 	k3d cluster delete epinio
