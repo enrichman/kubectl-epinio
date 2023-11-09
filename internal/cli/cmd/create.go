@@ -36,14 +36,19 @@ func NewCreateUserCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
 			ctx := c.Context()
 			username := args[0]
 
-			return epinioCLI.CreateUser(ctx, username, cfg.Password, cfg.Namespaces, cfg.Roles, cfg.Interactive)
+			namespaces := unique(cfg.Namespaces)
+
+			return epinioCLI.CreateUser(ctx, username, cfg.Password, namespaces, cfg.Roles, cfg.Interactive)
 		},
 	}
 
 	createUserCmd.Flags().BoolVarP(&cfg.Interactive, "interactive", "i", false, "interactive mode")
 	createUserCmd.Flags().StringVar(&cfg.Password, "password", "", "plain password of the user used during the login")
-	createUserCmd.Flags().StringSliceVar(&cfg.Namespaces, "namespace", nil, "namespaces")
-	createUserCmd.Flags().StringSliceVar(&cfg.Roles, "role", nil, "roles")
+	createUserCmd.Flags().StringSliceVar(&cfg.Namespaces, "namespaces", nil, "namespaces")
+	createUserCmd.Flags().StringSliceVar(&cfg.Roles, "roles", nil, "roles")
+
+	err := createUserCmd.RegisterFlagCompletionFunc("namespaces", NewNamespaceValidator(epinioCLI))
+	checkErr(err, "cannot create 'create user' command")
 
 	return createUserCmd
 }

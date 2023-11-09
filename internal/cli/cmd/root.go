@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/enrichman/kubectl-epinio/internal/cli"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -48,4 +50,10 @@ func NewRootCmd(streams genericiooptions.IOStreams) (*cobra.Command, error) {
 	options.configFlags.AddFlags(rootCmd.Flags())
 
 	return rootCmd, nil
+}
+
+func checkErr(err error, msg string) {
+	if err != nil {
+		log.Fatal(msg, err)
+	}
 }
