@@ -8,7 +8,7 @@ import (
 func NewDescribeCmd(cli *cli.EpinioCLI) *cobra.Command {
 	describeCmd := &cobra.Command{
 		Use:   "describe",
-		Short: "describe something",
+		Short: "Show details of one or many resources",
 		RunE: func(c *cobra.Command, args []string) error {
 			return nil
 		},
@@ -24,6 +24,7 @@ func NewDescribeCmd(cli *cli.EpinioCLI) *cobra.Command {
 func NewDescribeUserCmd(cli *cli.EpinioCLI) *cobra.Command {
 	return &cobra.Command{
 		Use:               "user",
+		Short:             "Show details of one or many users",
 		Aliases:           []string{"users"},
 		ValidArgsFunction: NewUserValidator(cli),
 		RunE: func(c *cobra.Command, args []string) error {

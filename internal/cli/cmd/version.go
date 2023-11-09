@@ -11,7 +11,8 @@ var Version = "v0.0.0-dev"
 
 func NewVersionCmd(kubeClient kubernetes.Interface) *cobra.Command {
 	return &cobra.Command{
-		Use: "version",
+		Use:   "version",
+		Short: "Print the plugin and server version",
 		RunE: func(c *cobra.Command, args []string) error {
 			sv, err := kubeClient.Discovery().ServerVersion()
 			if err != nil {

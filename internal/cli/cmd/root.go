@@ -35,7 +35,7 @@ func NewRootCmd(streams genericiooptions.IOStreams) (*cobra.Command, error) {
 
 	rootCmd := &cobra.Command{
 		Use:          "epinio",
-		Short:        "blabla epinio",
+		Short:        "Kubectl plugin to manage some Epinio resources",
 		SilenceUsage: true,
 	}
 
@@ -47,7 +47,8 @@ func NewRootCmd(streams genericiooptions.IOStreams) (*cobra.Command, error) {
 		NewCreateCmd(epinioCLI),
 	)
 
-	options.configFlags.AddFlags(rootCmd.Flags())
+	// Uncomment to add some kubectl flags
+	// options.configFlags.AddFlags(rootCmd.Flags())
 
 	return rootCmd, nil
 }

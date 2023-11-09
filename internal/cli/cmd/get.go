@@ -7,7 +7,8 @@ import (
 
 func NewGetCmd(cli *cli.EpinioCLI) *cobra.Command {
 	getCmd := &cobra.Command{
-		Use: "get",
+		Use:   "get",
+		Short: "Display one or many resources",
 	}
 
 	getCmd.AddCommand(
@@ -21,6 +22,7 @@ func NewGetCmd(cli *cli.EpinioCLI) *cobra.Command {
 func NewGetUserCmd(cli *cli.EpinioCLI) *cobra.Command {
 	return &cobra.Command{
 		Use:               "user",
+		Short:             "Display one or many users",
 		Aliases:           []string{"users"},
 		ValidArgsFunction: NewUserValidator(cli),
 		RunE: func(c *cobra.Command, args []string) error {
@@ -32,6 +34,7 @@ func NewGetUserCmd(cli *cli.EpinioCLI) *cobra.Command {
 func NewGetRoleCmd(cli *cli.EpinioCLI) *cobra.Command {
 	return &cobra.Command{
 		Use:               "role",
+		Short:             "Display one or many roles",
 		Aliases:           []string{"roles"},
 		ValidArgsFunction: NewRoleValidator(cli),
 		RunE: func(c *cobra.Command, args []string) error {
