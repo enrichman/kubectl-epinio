@@ -103,6 +103,52 @@ func TestGetUser(t *testing.T) {
 	}
 }
 
+func TestGetRoles(t *testing.T) {
+	testCases := []struct {
+		name            string
+		args            []string
+		expectedEntries []string
+		expectErr       bool
+	}{
+		{
+			name:            "get all roles",
+			args:            []string{},
+			expectedEntries: []string{},
+		},
+	}
+
+	for _, usersArg := range []string{"role", "roles"} {
+		for _, tc := range testCases {
+			t.Run(fmt.Sprintf("%s/%s", tc.name, usersArg), func(t *testing.T) {
+				args := []string{"get", usersArg}
+				args = append(args, tc.args...)
+
+				cmd := exec.Command(cmdExecPath(t), args...)
+
+				out, err := cmd.Output()
+				assert.NoError(t, err)
+
+				entries := strings.Split(string(out), "\n")
+				entries = entries[:len(entries)-1] // The last entry is empty
+
+				assert.True(t, len(entries) > 0)
+
+				assert.Equal(t, "ID", entries[0]) // header
+
+				foundEntries := make(map[string]struct{}, len(entries))
+				for _, entry := range entries {
+					foundEntries[entry] = struct{}{}
+				}
+
+				for _, expected := range tc.expectedEntries {
+					_, found := foundEntries[expected]
+					assert.True(t, found)
+				}
+			})
+		}
+	}
+}
+
 // getGitRepoRoot returns the root of the git repository in which it is executed.
 func getGitRepoRoot(t *testing.T) string {
 	cmd := exec.Command(

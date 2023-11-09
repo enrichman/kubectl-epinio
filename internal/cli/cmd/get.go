@@ -12,6 +12,7 @@ func NewGetCmd(cli *cli.EpinioCLI) *cobra.Command {
 
 	getCmd.AddCommand(
 		NewGetUserCmd(cli),
+		NewGetRoleCmd(cli),
 	)
 
 	return getCmd
@@ -23,8 +24,18 @@ func NewGetUserCmd(cli *cli.EpinioCLI) *cobra.Command {
 		Aliases:           []string{"users"},
 		ValidArgsFunction: NewUserValidator(cli),
 		RunE: func(c *cobra.Command, args []string) error {
-			usernames := args
-			return cli.GetUsers(c.Context(), usernames)
+			return cli.GetUsers(c.Context(), args)
+		},
+	}
+}
+
+func NewGetRoleCmd(cli *cli.EpinioCLI) *cobra.Command {
+	return &cobra.Command{
+		Use:               "role",
+		Aliases:           []string{"roles"},
+		ValidArgsFunction: NewRoleValidator(cli),
+		RunE: func(c *cobra.Command, args []string) error {
+			return cli.GetRoles(c.Context(), args)
 		},
 	}
 }
