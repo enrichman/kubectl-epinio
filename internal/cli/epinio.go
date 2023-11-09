@@ -3,8 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/enrichman/kubectl-epinio/pkg/epinio"
+	"github.com/liggitt/tabwriter"
 	"k8s.io/client-go/kubernetes"
 
 	_ "embed"
@@ -29,15 +32,17 @@ func (e *EpinioCLI) GetUsers(ctx context.Context, usernames []string) error {
 	if err != nil {
 		return err
 	}
-
 	users = filterUsers(usernames, users)
 
-	fmt.Println("USERNAME")
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 2, '\t', 0)
+	fmt.Fprintln(w, "USERNAME\tADMIN\tROLES\tAGE")
 	for _, u := range users {
-		fmt.Println(u.Username)
+		isAdmin := isUserAdmin(u)
+		fmt.Fprintf(w, "%s\t%t\t%d\t%s\n", u.Username, isAdmin, len(u.Roles), time.Since(u.CreationTimestamp).String())
 	}
 
-	return nil
+	return w.Flush()
 }
 
 func (e *EpinioCLI) DescribeUsers(ctx context.Context, usernames []string) error {
@@ -94,4 +99,16 @@ func printArray(description string, arr []string) {
 		}
 		fmt.Printf(format, leftCol, ns)
 	}
+}
+
+func isUserAdmin(user epinio.User) bool {
+	if user.Role == "admin" {
+		return true
+	}
+	for _, r := range user.Roles {
+		if r == "admin" {
+			return true
+		}
+	}
+	return false
 }

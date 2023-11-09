@@ -1,11 +1,14 @@
 package epinio
 
+import "time"
+
 type User struct {
-	Username   string `yaml:"username"`
-	Password   string
-	Namespaces []string
-	Role       string
-	Roles      []string
+	Username          string `yaml:"username"`
+	Password          string
+	Namespaces        []string
+	Role              string
+	Roles             []string
+	CreationTimestamp time.Time
 
 	secret string
 }
