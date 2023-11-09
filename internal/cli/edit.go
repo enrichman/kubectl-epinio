@@ -45,7 +45,7 @@ func (e *EpinioCLI) EditUser(ctx context.Context, username string) error {
 		return err
 	}
 
-	return e.KubeClient.PatchUser(ctx, updatedUser)
+	return e.KubeClient.UpdateUser(ctx, updatedUser)
 }
 
 func createEditUserTempFile(user epinio.User) (*os.File, error) {
