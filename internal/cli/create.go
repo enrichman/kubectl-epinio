@@ -1,9 +1,12 @@
 package cli
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -31,7 +34,8 @@ func (e *EpinioCLI) CreateUser(ctx context.Context, username, password string, n
 				return err
 			}
 
-			namespaces, err = promptMultiSelect(epinioNamespaces)
+			msg := "Namespaces assigned to the user:"
+			namespaces, err = promptMultiSelect(msg, epinioNamespaces)
 			if err != nil {
 				return err
 			}
@@ -51,6 +55,46 @@ func (e *EpinioCLI) CreateUser(ctx context.Context, username, password string, n
 	}
 
 	return e.KubeClient.CreateUser(ctx, user)
+}
+
+func (e *EpinioCLI) CreateRole(ctx context.Context, id, name string, isDefault bool, actions []string, interactive bool) error {
+	var err error
+
+	// start interactive mode
+	if interactive {
+		fmt.Println("ID:", id)
+
+		if name == "" {
+			name, err = promptName()
+			if err != nil {
+				return err
+			}
+		}
+
+		if !isDefault {
+			isDefault, err = promptDefault()
+			if err != nil {
+				return err
+			}
+		}
+
+		if len(actions) == 0 {
+			msg := "Actions assigned to the role:"
+			actions, err = promptMultiSelect(msg, epinio.Actions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	role := epinio.Role{
+		ID:      id,
+		Name:    name,
+		Default: isDefault,
+		Actions: actions,
+	}
+
+	return e.KubeClient.CreateRole(ctx, role)
 }
 
 func promptPassword() (string, error) {
@@ -76,9 +120,34 @@ func promptPassword() (string, error) {
 	return string(bytePassword1), nil
 }
 
-func promptMultiSelect(options []string) ([]string, error) {
+func promptName() (string, error) {
+	fmt.Print("Name: ")
+
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(input), nil
+}
+
+func promptDefault() (bool, error) {
+	fmt.Print("Is Default [true/false]: ")
+
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return false, err
+	}
+	boolStr := strings.TrimSpace(input)
+
+	return strconv.ParseBool(boolStr)
+}
+
+func promptMultiSelect(msg string, options []string) ([]string, error) {
 	prompt := &survey.MultiSelect{
-		Message:  "Namespaces assigned to the user:",
+		Message:  msg,
 		Options:  options,
 		PageSize: 10,
 	}

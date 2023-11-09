@@ -1,12 +1,19 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/enrichman/kubectl-epinio/internal/cli"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 )
 
 type ValidArgsFunc func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective)
+
+// NoFileCompletions can be used to disable file completion for commands that should not trigger file completions.
+func NoFileCompletions(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return []string{""}, cobra.ShellCompDirectiveNoFileComp
+}
 
 func NewUserValidator(epinioCLI *cli.EpinioCLI) ValidArgsFunc {
 	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -50,6 +57,30 @@ func NewNamespaceValidator(epinioCLI *cli.EpinioCLI) ValidArgsFunc {
 		}
 
 		return []string{""}, cobra.ShellCompDirectiveNoFileComp
+	}
+}
+
+func NewStaticFlagsCompletionFunc(allowedValues []string) ValidArgsFunc {
+	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		matches := []string{}
+
+		for _, allowed := range allowedValues {
+			if strings.HasPrefix(allowed, toComplete) {
+				matches = append(matches, allowed)
+			}
+		}
+
+		alreadySelected, err := cmd.Flags().GetStringSlice("actions")
+		if err != nil {
+			return []string{""}, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		filtered := filter(alreadySelected, matches)
+		if len(filtered) > 0 {
+			return filtered, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		return matches, cobra.ShellCompDirectiveNoFileComp
 	}
 }
 
