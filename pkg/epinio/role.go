@@ -107,3 +107,12 @@ func (k *KubeClient) CreateRole(ctx context.Context, role Role) error {
 
 	return nil
 }
+
+// DeleteRole deletes a role by id.
+func (k *KubeClient) DeleteRole(ctx context.Context, id string) error {
+	cmClient := k.kube.CoreV1().ConfigMaps("epinio")
+
+	name := names.GenerateResourceName("epinio", id, "role")
+
+	return cmClient.Delete(ctx, name, metav1.DeleteOptions{})
+}

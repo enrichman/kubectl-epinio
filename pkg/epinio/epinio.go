@@ -135,3 +135,12 @@ func (k *KubeClient) CreateUser(ctx context.Context, user User) error {
 	_, err := secretClient.Create(ctx, userSecret, metav1.CreateOptions{})
 	return err
 }
+
+// DeleteUser deletes a user by username.
+func (k *KubeClient) DeleteUser(ctx context.Context, username string) error {
+	secretClient := k.kube.CoreV1().Secrets("epinio")
+
+	name := names.GenerateResourceName("ruser", username)
+
+	return secretClient.Delete(ctx, name, metav1.DeleteOptions{})
+}
