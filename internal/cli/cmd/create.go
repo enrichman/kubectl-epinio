@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"github.com/enrichman/kubectl-epinio/internal/cli"
-	"github.com/enrichman/kubectl-epinio/pkg/epinio"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/maps"
 )
 
 func NewCreateCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
@@ -50,10 +50,10 @@ func NewCreateUserCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
 	createUserCmd.Flags().StringSliceVar(&cfg.Namespaces, "namespaces", nil, "namespaces")
 	createUserCmd.Flags().StringSliceVar(&cfg.Roles, "roles", nil, "roles")
 
-	err := createUserCmd.RegisterFlagCompletionFunc("namespaces", NewNamespaceValidator(epinioCLI))
+	err := createUserCmd.RegisterFlagCompletionFunc("namespaces", NewNamespacesFlagValidator(epinioCLI))
 	checkErr(err, "cannot create 'create user' command")
 
-	err = createUserCmd.RegisterFlagCompletionFunc("roles", NewRoleValidator(epinioCLI))
+	err = createUserCmd.RegisterFlagCompletionFunc("roles", NewRolesFlagValidator(epinioCLI))
 	checkErr(err, "cannot create 'create user' command")
 
 	return createUserCmd
@@ -78,10 +78,10 @@ func NewCreateRoleCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
 		ValidArgsFunction: NoFileCompletions,
 		RunE: func(c *cobra.Command, args []string) error {
 			ctx := c.Context()
-			id := args[0]
+			roleID := args[0]
 			actions := unique(cfg.Actions)
 
-			return epinioCLI.CreateRole(ctx, id, cfg.Name, cfg.Default, actions, cfg.Interactive)
+			return epinioCLI.CreateRole(ctx, roleID, cfg.Name, cfg.Default, actions, cfg.Interactive)
 		},
 	}
 
@@ -90,8 +90,18 @@ func NewCreateRoleCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
 	createRoleCmd.Flags().BoolVar(&cfg.Default, "default", false, "set the role as default")
 	createRoleCmd.Flags().StringSliceVar(&cfg.Actions, "actions", nil, "actions allowed for the role")
 
-	err := createRoleCmd.RegisterFlagCompletionFunc("actions", NewStaticFlagsCompletionFunc(epinio.Actions))
+	err := createRoleCmd.RegisterFlagCompletionFunc("actions", NewActionsFlagsValidator())
 	checkErr(err, "cannot create 'create role' command")
 
 	return createRoleCmd
+}
+
+func unique(arr []string) []string {
+	unique := map[string]struct{}{}
+
+	for _, v := range arr {
+		unique[v] = struct{}{}
+	}
+
+	return maps.Keys(unique)
 }

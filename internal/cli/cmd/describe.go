@@ -40,7 +40,7 @@ func NewDescribeRoleCmd(cli *cli.EpinioCLI) *cobra.Command {
 		Use:               "role",
 		Short:             "Show details of one or many roles",
 		Aliases:           []string{"roles"},
-		ValidArgsFunction: NewUserValidator(cli),
+		ValidArgsFunction: NewRoleValidator(cli),
 		RunE: func(c *cobra.Command, args []string) error {
 			usernames := args
 			return cli.DescribeRoles(c.Context(), usernames)

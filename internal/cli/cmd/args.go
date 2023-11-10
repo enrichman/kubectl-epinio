@@ -1,113 +1,118 @@
 package cmd
 
 import (
-	"strings"
+	"context"
 
 	"github.com/enrichman/kubectl-epinio/internal/cli"
+	"github.com/enrichman/kubectl-epinio/pkg/epinio"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 )
+
+var emptyCompletions = []string{""}
 
 type ValidArgsFunc func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective)
 
 // NoFileCompletions can be used to disable file completion for commands that should not trigger file completions.
 func NoFileCompletions(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	return []string{""}, cobra.ShellCompDirectiveNoFileComp
+	return emptyCompletions, cobra.ShellCompDirectiveNoFileComp
 }
 
 func NewUserValidator(epinioCLI *cli.EpinioCLI) ValidArgsFunc {
-	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		users, err := epinioCLI.KubeClient.ListUsers(cmd.Context())
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-
-		names := matchedFilter(args, users)
-		return names, cobra.ShellCompDirectiveNoFileComp
-	}
+	return newGetterValidator(epinioCLI.KubeClient.ListUsers)
 }
 
 func NewRoleValidator(epinioCLI *cli.EpinioCLI) ValidArgsFunc {
+	return newGetterValidator(epinioCLI.KubeClient.ListRoles)
+}
+
+func newGetterValidator[T idGetter](getter resourceGetter[T]) ValidArgsFunc {
 	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		roles, err := epinioCLI.KubeClient.ListRoles(cmd.Context())
+		resources, err := getResources(cmd.Context(), getter)
 		if err != nil {
-			return nil, cobra.ShellCompDirectiveNoFileComp
+			return emptyCompletions, cobra.ShellCompDirectiveNoFileComp
 		}
 
-		names := matchedFilter(args, roles)
-		return names, cobra.ShellCompDirectiveNoFileComp
+		return filter(args, resources)
 	}
 }
 
-func NewNamespaceValidator(epinioCLI *cli.EpinioCLI) ValidArgsFunc {
+func NewNamespacesFlagValidator(epinioCLI *cli.EpinioCLI) ValidArgsFunc {
 	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		ns, err := epinioCLI.KubeClient.ListNamespaces(cmd.Context())
+		namespaces, err := epinioCLI.KubeClient.ListNamespaces(cmd.Context())
 		if err != nil {
-			return []string{""}, cobra.ShellCompDirectiveNoFileComp
+			return emptyCompletions, cobra.ShellCompDirectiveNoFileComp
 		}
 
 		alreadySelected, err := cmd.Flags().GetStringSlice("namespaces")
 		if err != nil {
-			return []string{""}, cobra.ShellCompDirectiveNoFileComp
+			return emptyCompletions, cobra.ShellCompDirectiveNoFileComp
 		}
 
-		filtered := filter(alreadySelected, ns)
-		if len(filtered) > 0 {
-			return filtered, cobra.ShellCompDirectiveNoFileComp
-		}
-
-		return []string{""}, cobra.ShellCompDirectiveNoFileComp
+		return filter(alreadySelected, namespaces)
 	}
 }
 
-func NewStaticFlagsCompletionFunc(allowedValues []string) ValidArgsFunc {
+func NewRolesFlagValidator(epinioCLI *cli.EpinioCLI) ValidArgsFunc {
 	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		matches := []string{}
-
-		for _, allowed := range allowedValues {
-			if strings.HasPrefix(allowed, toComplete) {
-				matches = append(matches, allowed)
-			}
+		roles, err := getResources(cmd.Context(), epinioCLI.KubeClient.ListRoles)
+		if err != nil {
+			return emptyCompletions, cobra.ShellCompDirectiveNoFileComp
 		}
 
+		alreadySelected, err := cmd.Flags().GetStringSlice("roles")
+		if err != nil {
+			return emptyCompletions, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		return filter(alreadySelected, roles)
+	}
+}
+
+func NewActionsFlagsValidator() ValidArgsFunc {
+	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		alreadySelected, err := cmd.Flags().GetStringSlice("actions")
 		if err != nil {
-			return []string{""}, cobra.ShellCompDirectiveNoFileComp
+			return emptyCompletions, cobra.ShellCompDirectiveNoFileComp
 		}
 
-		filtered := filter(alreadySelected, matches)
-		if len(filtered) > 0 {
-			return filtered, cobra.ShellCompDirectiveNoFileComp
-		}
-
-		return matches, cobra.ShellCompDirectiveNoFileComp
+		return filter(alreadySelected, epinio.Actions)
 	}
+}
+
+type resourceGetter[T idGetter] func(context.Context) ([]T, error)
+
+func getResources[T idGetter](ctx context.Context, getter resourceGetter[T]) ([]string, error) {
+	resources, err := getter(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return idGetterToStringArray(resources), nil
 }
 
 type idGetter interface {
 	GetID() string
 }
 
-func matchedFilter[T idGetter](matched []string, resources []T) []string {
-	converted := idGetterToStringArray(resources)
-	return filter(matched, converted)
-}
-
-func filter(matched []string, resourceIDs []string) []string {
+func filter(matched []string, resourceIDs []string) ([]string, cobra.ShellCompDirective) {
 	// map to check for already selected resources
 	alreadyMatched := map[string]struct{}{}
 	for _, resource := range matched {
 		alreadyMatched[resource] = struct{}{}
 	}
 
-	names := []string{}
+	filtered := []string{}
 	for _, id := range resourceIDs {
 		if _, matched := alreadyMatched[id]; !matched {
-			names = append(names, id)
+			filtered = append(filtered, id)
 		}
 	}
 
-	return names
+	if len(filtered) > 0 {
+		return filtered, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	return emptyCompletions, cobra.ShellCompDirectiveNoFileComp
 }
 
 func idGetterToStringArray[T idGetter](resources []T) []string {
@@ -116,14 +121,4 @@ func idGetterToStringArray[T idGetter](resources []T) []string {
 		ids = append(ids, r.GetID())
 	}
 	return ids
-}
-
-func unique[T comparable](arr []T) []T {
-	unique := map[T]struct{}{}
-
-	for _, v := range arr {
-		unique[v] = struct{}{}
-	}
-
-	return maps.Keys(unique)
 }
