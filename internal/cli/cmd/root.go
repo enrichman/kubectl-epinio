@@ -45,6 +45,7 @@ func NewRootCmd(streams genericiooptions.IOStreams) (*cobra.Command, error) {
 		NewDescribeCmd(epinioCLI),
 		NewEditCmd(epinioCLI),
 		NewCreateCmd(epinioCLI),
+		NewDeleteCmd(epinioCLI),
 	)
 
 	// Uncomment to add some kubectl flags
