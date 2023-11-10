@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/enrichman/kubectl-epinio/pkg/epinio"
 	"k8s.io/client-go/kubernetes"
@@ -52,12 +53,35 @@ func (e *EpinioCLI) DescribeUsers(ctx context.Context, usernames []string) error
 
 	for i, u := range users {
 		if i != 0 {
-			fmt.Println()
+			fmt.Println("---")
 		}
 		fmt.Printf(format, "Username:", u.Username)
 		fmt.Printf(format, "Password:", u.Password)
 		printArray("Roles:", u.Roles)
 		printArray("Namespaces:", u.Namespaces)
+	}
+
+	return nil
+}
+
+func (e *EpinioCLI) DescribeRoles(ctx context.Context, ids []string) error {
+	roles, err := e.KubeClient.ListRoles(ctx)
+	if err != nil {
+		return err
+	}
+
+	roles = filterRoles(ids, roles)
+
+	format := "%-15s %s\n"
+
+	for i, r := range roles {
+		if i != 0 {
+			fmt.Println("---")
+		}
+		fmt.Printf(format, "ID:", r.ID)
+		fmt.Printf(format, "Name:", r.Name)
+		fmt.Printf(format, "Default:", strconv.FormatBool(r.Default))
+		printArray("Actions:", r.Actions)
 	}
 
 	return nil
@@ -94,4 +118,5 @@ func printArray(description string, arr []string) {
 		}
 		fmt.Printf(format, leftCol, ns)
 	}
+	fmt.Println()
 }

@@ -56,7 +56,7 @@ func (k *KubeClient) ListRoles(ctx context.Context) ([]Role, error) {
 		return nil, err
 	}
 
-	roles := []Role{}
+	roles := []Role{{ID: "admin", Name: "Admin Role"}}
 	for _, cm := range roleList.Items {
 		actions := []string{}
 

@@ -16,6 +16,7 @@ func NewDescribeCmd(cli *cli.EpinioCLI) *cobra.Command {
 
 	describeCmd.AddCommand(
 		NewDescribeUserCmd(cli),
+		NewDescribeRoleCmd(cli),
 	)
 
 	return describeCmd
@@ -30,6 +31,19 @@ func NewDescribeUserCmd(cli *cli.EpinioCLI) *cobra.Command {
 		RunE: func(c *cobra.Command, args []string) error {
 			usernames := args
 			return cli.DescribeUsers(c.Context(), usernames)
+		},
+	}
+}
+
+func NewDescribeRoleCmd(cli *cli.EpinioCLI) *cobra.Command {
+	return &cobra.Command{
+		Use:               "role",
+		Short:             "Show details of one or many roles",
+		Aliases:           []string{"roles"},
+		ValidArgsFunction: NewUserValidator(cli),
+		RunE: func(c *cobra.Command, args []string) error {
+			usernames := args
+			return cli.DescribeRoles(c.Context(), usernames)
 		},
 	}
 }
