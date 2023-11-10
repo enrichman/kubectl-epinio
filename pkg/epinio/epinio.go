@@ -124,6 +124,9 @@ func (k *KubeClient) CreateUser(ctx context.Context, user User) error {
 			Labels: map[string]string{
 				"epinio.io/api-user-credentials": "true",
 			},
+			Annotations: map[string]string{
+				"epinio.io/roles": strings.Join(user.Roles, ","),
+			},
 		},
 		Data: createSecretData,
 	}

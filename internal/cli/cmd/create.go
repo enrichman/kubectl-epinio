@@ -53,6 +53,9 @@ func NewCreateUserCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
 	err := createUserCmd.RegisterFlagCompletionFunc("namespaces", NewNamespaceValidator(epinioCLI))
 	checkErr(err, "cannot create 'create user' command")
 
+	err = createUserCmd.RegisterFlagCompletionFunc("roles", NewRoleValidator(epinioCLI))
+	checkErr(err, "cannot create 'create user' command")
+
 	return createUserCmd
 }
 
@@ -83,7 +86,9 @@ func NewCreateRoleCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
 	}
 
 	createRoleCmd.Flags().BoolVarP(&cfg.Interactive, "interactive", "i", false, "interactive mode")
-	createRoleCmd.Flags().StringSliceVar(&cfg.Actions, "actions", nil, "actions")
+	createRoleCmd.Flags().StringVar(&cfg.Name, "name", "", "friendly name of the role")
+	createRoleCmd.Flags().BoolVar(&cfg.Default, "default", false, "set the role as default")
+	createRoleCmd.Flags().StringSliceVar(&cfg.Actions, "actions", nil, "actions allowed for the role")
 
 	err := createRoleCmd.RegisterFlagCompletionFunc("actions", NewStaticFlagsCompletionFunc(epinio.Actions))
 	checkErr(err, "cannot create 'create role' command")

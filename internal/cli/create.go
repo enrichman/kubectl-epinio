@@ -40,6 +40,57 @@ func (e *EpinioCLI) CreateUser(ctx context.Context, username, password string, n
 				return err
 			}
 		}
+
+		if len(roles) == 0 {
+			epinioRoles, err := e.KubeClient.ListRoles(ctx)
+			if err != nil {
+				return err
+			}
+
+			roleIDs := []string{}
+			for _, r := range epinioRoles {
+				roleIDs = append(roleIDs, r.GetID())
+			}
+
+			msg := "Global Roles assigned to the user:"
+			roles, err = promptMultiSelect(msg, roleIDs)
+			if err != nil {
+				return err
+			}
+
+			// you need to have some namespaces assigned for Namescoped Roles
+			if len(namespaces) > 0 {
+				confirm, err := promptConfirmation("Do you want to assign Namescoped Roles? [y/n] ")
+				if err != nil {
+					return err
+				}
+				if confirm {
+					var namescopedRoles []string
+					msg := "Namescoped Roles assigned to the user:"
+
+					var selectedRoles []string
+					selectedRoles, err = promptMultiSelect(msg, roleIDs)
+					if err != nil {
+						return err
+					}
+
+					for _, roleToNamescope := range selectedRoles {
+						msg := fmt.Sprintf("Namespaces for '%s' role:", roleToNamescope)
+						namespacesForRole, err := promptMultiSelect(msg, namespaces)
+						if err != nil {
+							return err
+						}
+
+						for _, ns := range namespacesForRole {
+							namescopedRole := fmt.Sprintf("%s:%s", roleToNamescope, ns)
+							namescopedRoles = append(namescopedRoles, namescopedRole)
+						}
+					}
+
+					roles = append(roles, namescopedRoles...)
+				}
+			}
+		}
 	}
 
 	password, err = hashPasswordIfNeeded(password)
@@ -54,7 +105,30 @@ func (e *EpinioCLI) CreateUser(ctx context.Context, username, password string, n
 		Roles:      roles,
 	}
 
-	return e.KubeClient.CreateUser(ctx, user)
+	fmt.Println()
+	fmt.Printf(format, "Username:", user.Username)
+	fmt.Printf(format, "Password:", user.Password)
+	printArray("Roles:", user.Roles)
+	printArray("Namespaces:", user.Namespaces)
+	fmt.Println()
+
+	confirm, err := promptConfirmation("Create? [y/n] ")
+	if err != nil {
+		return err
+	}
+
+	if !confirm {
+		fmt.Println("aborted!")
+		return nil
+	}
+
+	err = e.KubeClient.CreateUser(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("User created!")
+	return nil
 }
 
 func (e *EpinioCLI) CreateRole(ctx context.Context, id, name string, isDefault bool, actions []string, interactive bool) error {
@@ -87,6 +161,18 @@ func (e *EpinioCLI) CreateRole(ctx context.Context, id, name string, isDefault b
 		}
 	}
 
+	//TODO: print summary
+
+	confirm, err := promptConfirmation("Create? [y/n] ")
+	if err != nil {
+		return err
+	}
+
+	if !confirm {
+		fmt.Println("aborted!")
+		return nil
+	}
+
 	role := epinio.Role{
 		ID:      id,
 		Name:    name,
@@ -94,7 +180,13 @@ func (e *EpinioCLI) CreateRole(ctx context.Context, id, name string, isDefault b
 		Actions: actions,
 	}
 
-	return e.KubeClient.CreateRole(ctx, role)
+	err = e.KubeClient.CreateRole(ctx, role)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Role created!")
+	return nil
 }
 
 func promptPassword() (string, error) {
@@ -133,7 +225,7 @@ func promptName() (string, error) {
 }
 
 func promptDefault() (bool, error) {
-	fmt.Print("Is Default [true/false]: ")
+	fmt.Print("Is Default? [true/false] ")
 
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
@@ -142,7 +234,22 @@ func promptDefault() (bool, error) {
 	}
 	boolStr := strings.TrimSpace(input)
 
-	return strconv.ParseBool(boolStr)
+	isDefault, _ := strconv.ParseBool(boolStr)
+	return isDefault, nil
+}
+
+func promptConfirmation(msg string) (bool, error) {
+	fmt.Print(msg)
+
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return false, err
+	}
+	yn := strings.TrimSpace(input)
+	yn = strings.ToLower(yn)
+
+	return (yn == "y" || yn == "yes"), nil
 }
 
 func promptMultiSelect(msg string, options []string) ([]string, error) {
