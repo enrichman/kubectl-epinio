@@ -112,14 +112,16 @@ func (e *EpinioCLI) CreateUser(ctx context.Context, username, password string, n
 	printArray("Namespaces:", user.Namespaces)
 	fmt.Println()
 
-	confirm, err := promptConfirmation("Create? [y/n] ")
-	if err != nil {
-		return err
-	}
+	if interactive {
+		confirm, err := promptConfirmation("Create? [y/n] ")
+		if err != nil {
+			return err
+		}
 
-	if !confirm {
-		fmt.Println("aborted!")
-		return nil
+		if !confirm {
+			fmt.Println("aborted!")
+			return nil
+		}
 	}
 
 	err = e.KubeClient.CreateUser(ctx, user)
@@ -159,18 +161,18 @@ func (e *EpinioCLI) CreateRole(ctx context.Context, id, name string, isDefault b
 				return err
 			}
 		}
-	}
 
-	//TODO: print summary
+		//TODO: print summary (also in non-interactive mode?)
 
-	confirm, err := promptConfirmation("Create? [y/n] ")
-	if err != nil {
-		return err
-	}
+		confirm, err := promptConfirmation("Create? [y/n] ")
+		if err != nil {
+			return err
+		}
 
-	if !confirm {
-		fmt.Println("aborted!")
-		return nil
+		if !confirm {
+			fmt.Println("aborted!")
+			return nil
+		}
 	}
 
 	role := epinio.Role{
