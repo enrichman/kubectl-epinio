@@ -15,8 +15,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// XXX: could we make this a tmp file per test case and make this work with the mock editor?
-const tmpFile = "/tmp/edited_user.yaml"
+// XXX: could we make these a set of tmp files per test case and make this work with the mock editor?
+// (this would enable test cases to be run in parallel)
+const (
+	preEditFile = "/tmp/before_edit.yaml"
+	tmpFile     = "/tmp/edited_user.yaml"
+)
 
 func TestEdit(t *testing.T) {
 	testCases := []struct {

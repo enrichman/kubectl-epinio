@@ -6,12 +6,12 @@
 #
 username : {{ .Username }}
 password:
-role: {{ .Role }}
-roles:
+{{- with .Role}}role: {{end}}{{ .Role }}
+{{- with .Roles}}roles:{{end}}
 {{- range $role := .Roles }}
   - {{ $role }}
 {{- end }}
-namespaces:
+{{- with .Namespaces}}namespaces:{{end}}
 {{- range $ns := .Namespaces }}
   - {{ $ns }}
 {{- end }}
