@@ -18,7 +18,7 @@ builds:
     goarm:
       - "7"
     ldflags: 
-      - "-X github.com/enrichman/kubectl-epinio/internal/cmd.Version={{.Version}}"
+      - "-X github.com/enrichman/kubectl-epinio/internal/cli/cmd.Version={{.Version}}"
 
 archives:
   - format: tar.gz
