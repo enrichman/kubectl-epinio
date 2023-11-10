@@ -1,6 +1,6 @@
 
 VERSION ?= $(shell git describe --tags --always)
-export LDFLAGS += -X github.com/enrichman/kubectl-epinio/internal/cmd.Version=$(VERSION)
+export LDFLAGS += -X github.com/enrichman/kubectl-epinio/internal/cli/cmd.Version=$(VERSION)
 export GOCOVERDIR=$(shell pwd)/output/coverage
 
 build:

@@ -22,3 +22,7 @@ func NewUser(secretName string) User {
 func (u User) SecretName() string {
 	return u.secret
 }
+
+func (u User) GetID() string {
+	return u.Username
+}

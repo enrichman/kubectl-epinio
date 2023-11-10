@@ -2,14 +2,12 @@ package epinio
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/enrichman/kubectl-epinio/pkg/epinio/internal/names"
@@ -71,8 +69,8 @@ func (k *KubeClient) ListUsers(ctx context.Context) ([]User, error) {
 
 		rolesAll := strings.TrimSpace(sec.Annotations["epinio.io/roles"])
 		if rolesAll != "" {
-			roles := strings.Split(rolesAll, "\n")
-			user.Namespaces = roles
+			roles := strings.Split(rolesAll, ",")
+			user.Roles = roles
 		}
 
 		users = append(users, user)
@@ -81,26 +79,30 @@ func (k *KubeClient) ListUsers(ctx context.Context) ([]User, error) {
 	return users, nil
 }
 
-func (k *KubeClient) PatchUser(ctx context.Context, user User) error {
-	patchSecretData := map[string][]byte{}
+func (k *KubeClient) UpdateUser(ctx context.Context, user User) error {
+	secretClient := k.kube.CoreV1().Secrets("epinio")
 
+	userSecret, err := secretClient.Get(ctx, user.secret, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	// update namespaces
+	userSecret.Data["namespaces"] = []byte("")
 	if len(user.Namespaces) > 0 {
 		nsData := strings.Join(user.Namespaces, "\n")
-		patchSecretData["namespaces"] = []byte(nsData)
+		userSecret.Data["namespaces"] = []byte(nsData)
 	}
 
-	patch, err := json.Marshal(v1.Secret{Data: patchSecretData})
-	if err != nil {
-		return err
+	// update roles
+	userSecret.Annotations["epinio.io/roles"] = ""
+	if len(user.Roles) > 0 {
+		joinedRoles := strings.Join(user.Roles, ",")
+		userSecret.Annotations["epinio.io/roles"] = joinedRoles
 	}
 
-	secretClient := k.kube.CoreV1().Secrets("epinio")
-	_, err = secretClient.Patch(ctx, user.secret, types.StrategicMergePatchType, patch, metav1.PatchOptions{})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err = secretClient.Update(ctx, userSecret, metav1.UpdateOptions{})
+	return err
 }
 
 func (k *KubeClient) CreateUser(ctx context.Context, user User) error {
@@ -123,15 +125,14 @@ func (k *KubeClient) CreateUser(ctx context.Context, user User) error {
 			Labels: map[string]string{
 				"epinio.io/api-user-credentials": "true",
 			},
+			Annotations: map[string]string{
+				"epinio.io/roles": strings.Join(user.Roles, ","),
+			},
 		},
 		Data: createSecretData,
 	}
 
 	secretClient := k.kube.CoreV1().Secrets("epinio")
 	_, err := secretClient.Create(ctx, userSecret, metav1.CreateOptions{})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

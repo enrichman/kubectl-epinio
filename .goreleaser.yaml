@@ -3,10 +3,7 @@
 version: 1
 
 project_name: kubectl-epinio
-before:
-  hooks:
-    - make test
-    - go mod tidy
+
 builds:
   - env:
       - CGO_ENABLED=0
@@ -21,7 +18,7 @@ builds:
     goarm:
       - "7"
     ldflags: 
-      - "-X github.com/enrichman/kubectl-epinio/internal/cmd.Version={{.Version}}"
+      - "-X github.com/enrichman/kubectl-epinio/internal/cli/cmd.Version={{.Version}}"
 
 archives:
   - format: tar.gz
@@ -37,10 +34,13 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Tag }}.sha256"
   algorithm: sha256
+
 dist: output
+
 changelog:
   sort: asc
   filters:

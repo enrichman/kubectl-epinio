@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/enrichman/kubectl-epinio/internal/cli"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -33,7 +35,7 @@ func NewRootCmd(streams genericiooptions.IOStreams) (*cobra.Command, error) {
 
 	rootCmd := &cobra.Command{
 		Use:          "epinio",
-		Short:        "blabla epinio",
+		Short:        "Kubectl plugin to manage some Epinio resources",
 		SilenceUsage: true,
 	}
 
@@ -45,7 +47,14 @@ func NewRootCmd(streams genericiooptions.IOStreams) (*cobra.Command, error) {
 		NewCreateCmd(epinioCLI),
 	)
 
-	options.configFlags.AddFlags(rootCmd.Flags())
+	// Uncomment to add some kubectl flags
+	// options.configFlags.AddFlags(rootCmd.Flags())
 
 	return rootCmd, nil
+}
+
+func checkErr(err error, msg string) {
+	if err != nil {
+		log.Fatal(msg, err)
+	}
 }
