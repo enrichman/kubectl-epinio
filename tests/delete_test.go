@@ -107,6 +107,7 @@ func deleteEntity(t *testing.T, entityName string, args []string, expectError bo
 
 	deleteArgs := []string{"delete", entityArg}
 	deleteArgs = append(deleteArgs, args...)
+	deleteArgs = append(deleteArgs, "-y") // non-interactive mode
 
 	cmd := exec.Command(cmdExecPath(t), deleteArgs...)
 

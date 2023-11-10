@@ -20,7 +20,7 @@ func NewDeleteCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
 }
 
 func NewDeleteUserCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
-	var interactive bool
+	var noConfirm bool
 
 	deleteUserCmd := &cobra.Command{
 		Use:               "user <username>",
@@ -32,17 +32,17 @@ func NewDeleteUserCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
 			ctx := c.Context()
 			username := args[0]
 
-			return epinioCLI.DeleteUser(ctx, username, interactive)
+			return epinioCLI.DeleteUser(ctx, username, noConfirm)
 		},
 	}
 
-	deleteUserCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "interactive deletion (prompt for confirmation)")
+	deleteUserCmd.Flags().BoolVarP(&noConfirm, "no-confirm", "y", false, "delete without confirmation")
 
 	return deleteUserCmd
 }
 
 func NewDeleteRoleCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
-	var interactive bool
+	var noConfirm bool
 
 	deleteRoleCmd := &cobra.Command{
 		Use:               "role <role_id>",
@@ -54,11 +54,11 @@ func NewDeleteRoleCmd(epinioCLI *cli.EpinioCLI) *cobra.Command {
 			ctx := c.Context()
 			id := args[0]
 
-			return epinioCLI.DeleteRole(ctx, id, interactive)
+			return epinioCLI.DeleteRole(ctx, id, noConfirm)
 		},
 	}
 
-	deleteRoleCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "interactive deletion (prompt for confirmation)")
+	deleteRoleCmd.Flags().BoolVarP(&noConfirm, "no-confirm", "y", false, "deletion without confirmation")
 
 	return deleteRoleCmd
 }

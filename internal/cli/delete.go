@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-// DeleteUser deletes a user by username, after asking for confirmation if interactive resolves to `true`.
-func (e *EpinioCLI) DeleteUser(ctx context.Context, username string, interactive bool) error {
-	if interactive {
+// DeleteUser deletes a user by username, after asking for confirmation if noConfirm resolves to `false`.
+func (e *EpinioCLI) DeleteUser(ctx context.Context, username string, noConfirm bool) error {
+	if !noConfirm {
 		confirm, err := promptConfirmation("Delete? [y/n] ")
 		if err != nil {
 			return err
@@ -28,9 +28,9 @@ func (e *EpinioCLI) DeleteUser(ctx context.Context, username string, interactive
 	return nil
 }
 
-// DeleteRole deletes a role by id, after asking for confirmation if interactive resolves to `true`.
-func (e *EpinioCLI) DeleteRole(ctx context.Context, id string, interactive bool) error {
-	if interactive {
+// DeleteRole deletes a role by id, after asking for confirmation if noConfirm resolves to `false`.
+func (e *EpinioCLI) DeleteRole(ctx context.Context, id string, noConfirm bool) error {
+	if !noConfirm {
 		confirm, err := promptConfirmation("Delete? [y/n] ")
 		if err != nil {
 			return err
