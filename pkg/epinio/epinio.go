@@ -52,9 +52,10 @@ func (k *KubeClient) ListUsers(ctx context.Context) ([]User, error) {
 	users := []User{}
 	for _, sec := range secretList.Items {
 		user := User{
-			Username: string(sec.Data["username"]),
-			Password: string(sec.Data["password"]),
-			Role:     sec.Labels["epinio.io/role"],
+			Username:          string(sec.Data["username"]),
+			Password:          string(sec.Data["password"]),
+			Role:              sec.Labels["epinio.io/role"],
+			CreationTimestamp: sec.CreationTimestamp.Time,
 
 			secret: sec.Name,
 		}
