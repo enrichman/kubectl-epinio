@@ -86,10 +86,6 @@ password: foo`,
 				_, err = f.Write([]byte(tc.newUserContents))
 				require.NoError(t, err)
 
-				if tc.createUser != nil {
-					checkPreEditContents(t, *tc.createUser)
-				}
-
 				args := []string{"edit", usersArg}
 				args = append(args, tc.args...)
 
@@ -106,6 +102,10 @@ password: foo`,
 					assert.Empty(t, out)
 				} else {
 					assert.Equal(t, tc.expectedOutput, strings.TrimSpace(string(out)))
+				}
+
+				if tc.createUser != nil {
+					checkPreEditContents(t, *tc.createUser)
 				}
 
 				if tc.createUser != nil {
