@@ -87,7 +87,12 @@ func TestGetUser(t *testing.T) {
 
 				assert.True(t, len(entries) > 0)
 
-				assert.Equal(t, "USERNAME", entries[0]) // header
+				headerCells := strings.Fields(entries[0]) // header
+				assert.Equal(t, 4, len(headerCells))
+				assert.Equal(t, "USERNAME", headerCells[0])
+				assert.Equal(t, "ADMIN", headerCells[1])
+				assert.Equal(t, "ROLES", headerCells[2])
+				assert.Equal(t, "AGE", headerCells[3])
 
 				foundEntries := make(map[string]struct{}, len(entries))
 				for _, entry := range entries {
@@ -133,7 +138,13 @@ func TestGetRoles(t *testing.T) {
 
 				assert.True(t, len(entries) > 0)
 
-				assert.Equal(t, "ID", entries[0]) // header
+				headerCells := strings.Fields(entries[0]) // header
+				assert.Equal(t, 5, len(headerCells))
+				assert.Equal(t, "ID", headerCells[0])
+				assert.Equal(t, "NAME", headerCells[1])
+				assert.Equal(t, "DEFAULT", headerCells[2])
+				assert.Equal(t, "ACTIONS", headerCells[3])
+				assert.Equal(t, "AGE", headerCells[4])
 
 				foundEntries := make(map[string]struct{}, len(entries))
 				for _, entry := range entries {
