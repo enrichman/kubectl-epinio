@@ -3,6 +3,9 @@ package cli
 import (
 	"context"
 	"fmt"
+	"os"
+	"text/tabwriter"
+	"time"
 
 	_ "embed"
 
@@ -17,12 +20,19 @@ func (e *EpinioCLI) GetRoles(ctx context.Context, names []string) error {
 
 	roles = filterRoles(names, roles)
 
-	fmt.Println("ID")
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 2, '\t', 0)
+
+	fmt.Fprintln(w, "ID\tNAME\tDEFAULT\tACTIONS\tAGE")
 	for _, r := range roles {
-		fmt.Println(r.ID)
+		age := "-"
+		if r.CreationTimestamp.Unix() > 0 {
+			age = time.Since(r.CreationTimestamp).Truncate(time.Second).String()
+		}
+		fmt.Fprintf(w, "%s\t%s\t%t\t%d\t%s\n", r.ID, r.Name, r.Default, len(r.Actions), age)
 	}
 
-	return nil
+	return w.Flush()
 }
 
 func filterRoles(usernames []string, roles []epinio.Role) []epinio.Role {

@@ -136,13 +136,19 @@ func checkEntityExists(t *testing.T, entityName string, name string, shouldBeFou
 	out, err := cmd.Output()
 	require.NoError(t, err)
 
-	isFound := false
+	rows := strings.Split(strings.TrimSpace(string(out)), "\n")
 
-	foundEntries := strings.Split(string(out), "\n")
-	for _, entry := range foundEntries {
-		if entry == name {
-			isFound = true
-			break
+	isFound := false
+	for i, row := range rows {
+		// skip headers
+		if i > 0 {
+			rowCells := strings.FieldsFunc(row, func(r rune) bool {
+				return r == '\t'
+			})
+			if rowCells[0] == name {
+				isFound = true
+				break
+			}
 		}
 	}
 

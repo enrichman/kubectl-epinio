@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/enrichman/kubectl-epinio/pkg/epinio/internal/names"
 	v1 "k8s.io/api/core/v1"
@@ -35,10 +36,11 @@ var Actions = []string{
 }
 
 type Role struct {
-	ID      string
-	Default bool
-	Name    string
-	Actions []string
+	ID                string
+	Default           bool
+	Name              string
+	Actions           []string
+	CreationTimestamp time.Time
 }
 
 func (r Role) GetID() string {
@@ -65,10 +67,14 @@ func (k *KubeClient) ListRoles(ctx context.Context) ([]Role, error) {
 			actions = append(actions, splitted...)
 		}
 
+		isDefault, _ := strconv.ParseBool(cm.Data["default"])
+
 		roles = append(roles, Role{
-			ID:      cm.Data["id"],
-			Name:    cm.Data["name"],
-			Actions: actions,
+			ID:                cm.Data["id"],
+			Name:              cm.Data["name"],
+			Actions:           actions,
+			Default:           isDefault,
+			CreationTimestamp: cm.CreationTimestamp.Time,
 		})
 	}
 

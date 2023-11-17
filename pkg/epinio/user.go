@@ -1,11 +1,14 @@
 package epinio
 
+import "time"
+
 type User struct {
-	Username   string `yaml:"username"`
-	Password   string
-	Namespaces []string
-	Role       string
-	Roles      []string
+	Username          string `yaml:"username"`
+	Password          string
+	Namespaces        []string
+	Role              string
+	Roles             []string
+	CreationTimestamp time.Time
 
 	secret string
 }
@@ -22,4 +25,18 @@ func (u User) SecretName() string {
 
 func (u User) GetID() string {
 	return u.Username
+}
+
+func (u User) IsAdmin() bool {
+	if u.Role == "admin" {
+		return true
+	}
+
+	for _, r := range u.Roles {
+		if r == "admin" {
+			return true
+		}
+	}
+
+	return false
 }

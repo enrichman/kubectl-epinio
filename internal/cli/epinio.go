@@ -3,7 +3,12 @@ package cli
 import (
 	"context"
 	"fmt"
+	"os"
+	"slices"
 	"strconv"
+	"strings"
+	"text/tabwriter"
+	"time"
 
 	"github.com/enrichman/kubectl-epinio/pkg/epinio"
 	"k8s.io/client-go/kubernetes"
@@ -33,12 +38,27 @@ func (e *EpinioCLI) GetUsers(ctx context.Context, usernames []string) error {
 
 	users = filterUsers(usernames, users)
 
-	fmt.Println("USERNAME")
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 2, '\t', 0)
+
+	fmt.Fprintln(w, "USERNAME\tADMIN\tROLES\tAGE")
 	for _, u := range users {
-		fmt.Println(u.Username)
+		var roles int
+		if u.Role != "" {
+			roles = 1
+		} else if len(u.Roles) > 0 {
+			roles = len(u.Roles)
+		}
+
+		age := "-"
+		if u.CreationTimestamp.Unix() > 0 {
+			age = time.Since(u.CreationTimestamp).Truncate(time.Second).String()
+		}
+
+		fmt.Fprintf(w, "%s\t%t\t%d\t%s\n", u.Username, u.IsAdmin(), roles, age)
 	}
 
-	return nil
+	return w.Flush()
 }
 
 func (e *EpinioCLI) DescribeUsers(ctx context.Context, usernames []string) error {
@@ -89,6 +109,9 @@ func (e *EpinioCLI) DescribeRoles(ctx context.Context, ids []string) error {
 
 func filterUsers(usernames []string, users []epinio.User) []epinio.User {
 	if len(usernames) == 0 {
+		slices.SortFunc(users, func(i, j epinio.User) int {
+			return strings.Compare(i.Username, j.Username)
+		})
 		return users
 	}
 
