@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -26,48 +28,60 @@ func TestGetUser(t *testing.T) {
 	testCases := []struct {
 		name            string
 		args            []string
-		expectedEntries []string
+		expectedEntries [][]interface{}
 		expectErr       bool
 	}{
 		{
 			name: "get all users",
 			args: []string{},
-			expectedEntries: []string{
-				"admin",
-				"admin@epinio.io",
-				"epinio",
+			expectedEntries: [][]interface{}{
+				{"USERNAME", "ADMIN", "ROLES", "AGE"},
+				{"admin", true, 1, ""},
+				{"admin@epinio.io", true, 1, ""},
+				{"epinio", false, 1, ""},
 			},
 		},
 		{
 			name: "get all users",
 			args: []string{},
-			expectedEntries: []string{
-				"admin",
-				"admin@epinio.io",
-				"epinio",
+			expectedEntries: [][]interface{}{
+				{"USERNAME", "ADMIN", "ROLES", "AGE"},
+				{"admin", true, 1, ""},
+				{"admin@epinio.io", true, 1, ""},
+				{"epinio", false, 1, ""},
 			},
 		},
 		{
 			name: "get single user with exact match",
 			args: []string{"epinio"},
-			expectedEntries: []string{
-				"epinio",
+			expectedEntries: [][]interface{}{
+				{"USERNAME", "ADMIN", "ROLES", "AGE"},
+				{"epinio", false, 1, ""},
 			},
 		},
 		{
-			name:            "get nonexistent user",
-			args:            []string{"nothere"},
-			expectedEntries: []string{},
+			name: "get nonexistent user",
+			args: []string{"nothere"},
+			expectedEntries: [][]interface{}{
+				{"USERNAME", "ADMIN", "ROLES", "AGE"},
+			},
 		},
 		{
-			name:            "get multiple users with exact matches",
-			args:            []string{"epinio", "admin"},
-			expectedEntries: []string{"admin", "epinio"},
+			name: "get multiple users with exact matches",
+			args: []string{"epinio", "admin"},
+			expectedEntries: [][]interface{}{
+				{"USERNAME", "ADMIN", "ROLES", "AGE"},
+				{"admin", true, 1, ""},
+				{"epinio", false, 1, ""},
+			},
 		},
 		{
-			name:            "get multiple users with single exact match",
-			args:            []string{"epinio", "nothere"},
-			expectedEntries: []string{"epinio"},
+			name: "get multiple users with single exact match",
+			args: []string{"epinio", "nothere"},
+			expectedEntries: [][]interface{}{
+				{"USERNAME", "ADMIN", "ROLES", "AGE"},
+				{"epinio", false, 1, ""},
+			},
 		},
 	}
 
@@ -82,26 +96,39 @@ func TestGetUser(t *testing.T) {
 				out, err := cmd.Output()
 				assert.NoError(t, err)
 
-				entries := strings.Split(string(out), "\n")
-				entries = entries[:len(entries)-1] // The last entry is empty
+				rows := strings.Split(strings.TrimSpace(string(out)), "\n")
+				assert.True(t, len(rows) > 0)
 
-				assert.True(t, len(entries) > 0)
+				for i, row := range rows {
+					rowCells := strings.Fields(row)
+					assert.Equal(t, len(tc.expectedEntries[i]), len(rowCells))
 
-				headerCells := strings.Fields(entries[0]) // header
-				assert.Equal(t, 4, len(headerCells))
-				assert.Equal(t, "USERNAME", headerCells[0])
-				assert.Equal(t, "ADMIN", headerCells[1])
-				assert.Equal(t, "ROLES", headerCells[2])
-				assert.Equal(t, "AGE", headerCells[3])
+					// check headers
+					if i == 0 {
+						for j, expected := range tc.expectedEntries[i] {
+							assert.Equal(t, expected, rowCells[j])
+						}
+						continue
+					}
 
-				foundEntries := make(map[string]struct{}, len(entries))
-				for _, entry := range entries {
-					foundEntries[entry] = struct{}{}
-				}
-
-				for _, expected := range tc.expectedEntries {
-					_, found := foundEntries[expected]
-					assert.True(t, found)
+					// check values
+					for j, expected := range tc.expectedEntries[i] {
+						switch j {
+						case 0:
+							assert.Equal(t, expected, rowCells[j])
+						case 1:
+							parsedBool, err := strconv.ParseBool(rowCells[j])
+							assert.NoError(t, err)
+							assert.Equal(t, expected, parsedBool)
+						case 2:
+							parsedInt, err := strconv.Atoi(rowCells[j])
+							assert.NoError(t, err)
+							assert.Equal(t, expected, parsedInt)
+						case 3:
+							_, err := time.ParseDuration(rowCells[j])
+							assert.NoError(t, err)
+						}
+					}
 				}
 			})
 		}
@@ -112,13 +139,15 @@ func TestGetRoles(t *testing.T) {
 	testCases := []struct {
 		name            string
 		args            []string
-		expectedEntries []string
-		expectErr       bool
+		expectedEntries [][]interface{}
 	}{
 		{
-			name:            "get all roles",
-			args:            []string{},
-			expectedEntries: []string{},
+			name: "get all roles",
+			args: []string{},
+			expectedEntries: [][]interface{}{
+				{"ID", "NAME", "DEFAULT", "ACTIONS", "AGE"},
+				{"admin", "Admin Role", false, 0, "-"},
+			},
 		},
 	}
 
@@ -133,27 +162,43 @@ func TestGetRoles(t *testing.T) {
 				out, err := cmd.Output()
 				assert.NoError(t, err)
 
-				entries := strings.Split(string(out), "\n")
-				entries = entries[:len(entries)-1] // The last entry is empty
+				rows := strings.Split(strings.TrimSpace(string(out)), "\n")
+				assert.True(t, len(rows) > 0)
 
-				assert.True(t, len(entries) > 0)
+				for i, row := range rows {
+					rowCells := strings.FieldsFunc(row, func(r rune) bool { return r == '\t' })
+					assert.Equal(t, len(tc.expectedEntries[i]), len(rowCells))
 
-				headerCells := strings.Fields(entries[0]) // header
-				assert.Equal(t, 5, len(headerCells))
-				assert.Equal(t, "ID", headerCells[0])
-				assert.Equal(t, "NAME", headerCells[1])
-				assert.Equal(t, "DEFAULT", headerCells[2])
-				assert.Equal(t, "ACTIONS", headerCells[3])
-				assert.Equal(t, "AGE", headerCells[4])
+					// check headers
+					if i == 0 {
+						for j, expected := range tc.expectedEntries[i] {
+							assert.Equal(t, expected, rowCells[j])
+						}
+						continue
+					}
 
-				foundEntries := make(map[string]struct{}, len(entries))
-				for _, entry := range entries {
-					foundEntries[entry] = struct{}{}
-				}
+					// check values
+					for j, expected := range tc.expectedEntries[i] {
+						actual := rowCells[j]
 
-				for _, expected := range tc.expectedEntries {
-					_, found := foundEntries[expected]
-					assert.True(t, found)
+						switch j {
+						case 0, 1:
+							assert.Equal(t, expected, actual)
+						case 2:
+							parsedBool, err := strconv.ParseBool(actual)
+							assert.NoError(t, err)
+							assert.Equal(t, expected, parsedBool)
+						case 3:
+							parsedInt, err := strconv.Atoi(actual)
+							assert.NoError(t, err)
+							assert.Equal(t, expected, parsedInt)
+						case 4:
+							if actual != "-" {
+								_, err := time.ParseDuration(actual)
+								assert.NoError(t, err)
+							}
+						}
+					}
 				}
 			})
 		}
