@@ -100,7 +100,9 @@ func TestGetUser(t *testing.T) {
 				assert.True(t, len(rows) > 0)
 
 				for i, row := range rows {
-					rowCells := strings.Fields(row)
+					rowCells := strings.FieldsFunc(row, func(r rune) bool {
+						return r == '\t'
+					})
 					assert.Equal(t, len(tc.expectedEntries[i]), len(rowCells))
 
 					// check headers
@@ -166,7 +168,9 @@ func TestGetRoles(t *testing.T) {
 				assert.True(t, len(rows) > 0)
 
 				for i, row := range rows {
-					rowCells := strings.FieldsFunc(row, func(r rune) bool { return r == '\t' })
+					rowCells := strings.FieldsFunc(row, func(r rune) bool {
+						return r == '\t'
+					})
 					assert.Equal(t, len(tc.expectedEntries[i]), len(rowCells))
 
 					// check headers
