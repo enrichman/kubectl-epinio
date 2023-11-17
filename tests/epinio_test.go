@@ -71,8 +71,8 @@ func TestGetUser(t *testing.T) {
 			args: []string{"epinio", "admin"},
 			expectedEntries: [][]interface{}{
 				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"admin", true, 1, ""},
 				{"epinio", false, 1, ""},
+				{"admin", true, 1, ""},
 			},
 		},
 		{
@@ -93,10 +93,11 @@ func TestGetUser(t *testing.T) {
 
 				cmd := exec.Command(cmdExecPath(t), args...)
 
-				out, err := cmd.Output()
+				stdout, err := cmd.Output()
 				assert.NoError(t, err)
 
-				rows := strings.Split(strings.TrimSpace(string(out)), "\n")
+				out := strings.TrimSpace(string(stdout))
+				rows := strings.Split(out, "\n")
 				assert.True(t, len(rows) > 0)
 
 				for i, row := range rows {
@@ -115,22 +116,28 @@ func TestGetUser(t *testing.T) {
 
 					// check values
 					for j, expected := range tc.expectedEntries[i] {
+						actual := rowCells[j]
+
 						switch j {
 						case 0:
-							assert.Equal(t, expected, rowCells[j])
+							assert.Equal(t, expected, actual)
 						case 1:
-							parsedBool, err := strconv.ParseBool(rowCells[j])
+							parsedBool, err := strconv.ParseBool(actual)
 							assert.NoError(t, err)
 							assert.Equal(t, expected, parsedBool)
 						case 2:
-							parsedInt, err := strconv.Atoi(rowCells[j])
+							parsedInt, err := strconv.Atoi(actual)
 							assert.NoError(t, err)
 							assert.Equal(t, expected, parsedInt)
 						case 3:
-							_, err := time.ParseDuration(rowCells[j])
+							_, err := time.ParseDuration(actual)
 							assert.NoError(t, err)
 						}
 					}
+				}
+
+				if t.Failed() {
+					t.Log("Test failed.\nOutput was:\n", out)
 				}
 			})
 		}
@@ -161,10 +168,11 @@ func TestGetRoles(t *testing.T) {
 
 				cmd := exec.Command(cmdExecPath(t), args...)
 
-				out, err := cmd.Output()
+				stdout, err := cmd.Output()
 				assert.NoError(t, err)
 
-				rows := strings.Split(strings.TrimSpace(string(out)), "\n")
+				out := strings.TrimSpace(string(stdout))
+				rows := strings.Split(out, "\n")
 				assert.True(t, len(rows) > 0)
 
 				for i, row := range rows {
@@ -203,6 +211,10 @@ func TestGetRoles(t *testing.T) {
 							}
 						}
 					}
+				}
+
+				if t.Failed() {
+					t.Log("Test failed.\nOutput was:\n", out)
 				}
 			})
 		}

@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -107,6 +109,9 @@ func (e *EpinioCLI) DescribeRoles(ctx context.Context, ids []string) error {
 
 func filterUsers(usernames []string, users []epinio.User) []epinio.User {
 	if len(usernames) == 0 {
+		slices.SortFunc(users, func(i, j epinio.User) int {
+			return strings.Compare(i.Username, j.Username)
+		})
 		return users
 	}
 
