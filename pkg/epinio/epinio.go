@@ -87,6 +87,11 @@ func (k *KubeClient) UpdateUser(ctx context.Context, user User) error {
 		return err
 	}
 
+	// update password
+	if len(user.Password) > 0 {
+		userSecret.Data["password"] = []byte(user.Password)
+	}
+
 	// update namespaces
 	userSecret.Data["namespaces"] = []byte("")
 	if len(user.Namespaces) > 0 {

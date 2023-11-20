@@ -4,8 +4,8 @@
 #
 # The 'password' field can be provided in a plain value. It will be hashed automatically for you.
 #
-username : {{ .Username }}
-password:
+username: {{ .Username }}
+password: {{ .Password }}
 role: {{ .Role }}
 roles:
 {{- range $role := .Roles }}
