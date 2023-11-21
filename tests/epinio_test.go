@@ -1,240 +1,94 @@
 package tests
 
 import (
+	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"path"
-	"strconv"
 	"strings"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
-func TestGet(t *testing.T) {
-	cmd := exec.Command(
-		cmdExecPath(t),
-		"get",
-	)
-
-	out, err := cmd.Output()
-	assert.NoError(t, err)
-
-	assert.Contains(t, string(out), "Usage:")
+type KubectlEpinio struct {
+	binPath string
 }
 
-func TestGetUser(t *testing.T) {
-	testCases := []struct {
-		name            string
-		args            []string
-		expectedEntries [][]interface{}
-		expectErr       bool
-	}{
-		{
-			name: "get all users",
-			args: []string{},
-			expectedEntries: [][]interface{}{
-				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"admin", true, 1, ""},
-				{"admin@epinio.io", true, 1, ""},
-				{"epinio", false, 1, ""},
-			},
-		},
-		{
-			name: "get all users",
-			args: []string{},
-			expectedEntries: [][]interface{}{
-				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"admin", true, 1, ""},
-				{"admin@epinio.io", true, 1, ""},
-				{"epinio", false, 1, ""},
-			},
-		},
-		{
-			name: "get single user with exact match",
-			args: []string{"epinio"},
-			expectedEntries: [][]interface{}{
-				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"epinio", false, 1, ""},
-			},
-		},
-		{
-			name: "get nonexistent user",
-			args: []string{"nothere"},
-			expectedEntries: [][]interface{}{
-				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-			},
-		},
-		{
-			name: "get multiple users with exact matches",
-			args: []string{"epinio", "admin"},
-			expectedEntries: [][]interface{}{
-				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"epinio", false, 1, ""},
-				{"admin", true, 1, ""},
-			},
-		},
-		{
-			name: "get multiple users with single exact match",
-			args: []string{"epinio", "nothere"},
-			expectedEntries: [][]interface{}{
-				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"epinio", false, 1, ""},
-			},
-		},
-	}
-
-	for _, usersArg := range []string{"user", "users"} {
-		for _, tc := range testCases {
-			t.Run(fmt.Sprintf("%s/%s", tc.name, usersArg), func(t *testing.T) {
-				args := []string{"get", usersArg}
-				args = append(args, tc.args...)
-
-				cmd := exec.Command(cmdExecPath(t), args...)
-
-				stdout, err := cmd.Output()
-				assert.NoError(t, err)
-
-				out := strings.TrimSpace(string(stdout))
-				rows := strings.Split(out, "\n")
-				assert.True(t, len(rows) > 0)
-
-				for i, row := range rows {
-					rowCells := strings.FieldsFunc(row, func(r rune) bool {
-						return r == '\t'
-					})
-					assert.Equal(t, len(tc.expectedEntries[i]), len(rowCells))
-
-					// check headers
-					if i == 0 {
-						for j, expected := range tc.expectedEntries[i] {
-							assert.Equal(t, expected, rowCells[j])
-						}
-						continue
-					}
-
-					// check values
-					for j, expected := range tc.expectedEntries[i] {
-						actual := rowCells[j]
-
-						switch j {
-						case 0:
-							assert.Equal(t, expected, actual)
-						case 1:
-							parsedBool, err := strconv.ParseBool(actual)
-							assert.NoError(t, err)
-							assert.Equal(t, expected, parsedBool)
-						case 2:
-							parsedInt, err := strconv.Atoi(actual)
-							assert.NoError(t, err)
-							assert.Equal(t, expected, parsedInt)
-						case 3:
-							_, err := time.ParseDuration(actual)
-							assert.NoError(t, err)
-						}
-					}
-				}
-
-				if t.Failed() {
-					t.Log("Test failed.\nOutput was:\n", out)
-				}
-			})
-		}
-	}
-}
-
-func TestGetRoles(t *testing.T) {
-	testCases := []struct {
-		name            string
-		args            []string
-		expectedEntries [][]interface{}
-	}{
-		{
-			name: "get all roles",
-			args: []string{},
-			expectedEntries: [][]interface{}{
-				{"ID", "NAME", "DEFAULT", "ACTIONS", "AGE"},
-				{"admin", "Admin Role", false, 0, "-"},
-			},
-		},
-	}
-
-	for _, usersArg := range []string{"role", "roles"} {
-		for _, tc := range testCases {
-			t.Run(fmt.Sprintf("%s/%s", tc.name, usersArg), func(t *testing.T) {
-				args := []string{"get", usersArg}
-				args = append(args, tc.args...)
-
-				cmd := exec.Command(cmdExecPath(t), args...)
-
-				stdout, err := cmd.Output()
-				assert.NoError(t, err)
-
-				out := strings.TrimSpace(string(stdout))
-				rows := strings.Split(out, "\n")
-				assert.True(t, len(rows) > 0)
-
-				for i, row := range rows {
-					rowCells := strings.FieldsFunc(row, func(r rune) bool {
-						return r == '\t'
-					})
-					assert.Equal(t, len(tc.expectedEntries[i]), len(rowCells))
-
-					// check headers
-					if i == 0 {
-						for j, expected := range tc.expectedEntries[i] {
-							assert.Equal(t, expected, rowCells[j])
-						}
-						continue
-					}
-
-					// check values
-					for j, expected := range tc.expectedEntries[i] {
-						actual := rowCells[j]
-
-						switch j {
-						case 0, 1:
-							assert.Equal(t, expected, actual)
-						case 2:
-							parsedBool, err := strconv.ParseBool(actual)
-							assert.NoError(t, err)
-							assert.Equal(t, expected, parsedBool)
-						case 3:
-							parsedInt, err := strconv.Atoi(actual)
-							assert.NoError(t, err)
-							assert.Equal(t, expected, parsedInt)
-						case 4:
-							if actual != "-" {
-								_, err := time.ParseDuration(actual)
-								assert.NoError(t, err)
-							}
-						}
-					}
-				}
-
-				if t.Failed() {
-					t.Log("Test failed.\nOutput was:\n", out)
-				}
-			})
-		}
-	}
-}
-
-// getGitRepoRoot returns the root of the git repository in which it is executed.
-func getGitRepoRoot(t *testing.T) string {
+func NewKubectlEpinio() (*KubectlEpinio, error) {
 	cmd := exec.Command(
 		"git",
 		"rev-parse",
 		"--show-toplevel",
 	)
-	root, err := cmd.Output()
-	assert.NoError(t, err)
 
-	return strings.TrimRight(string(root), "\n")
+	root, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	repoRoot := strings.TrimSpace(string(root))
+
+	return &KubectlEpinio{
+		binPath: path.Join(repoRoot, "output", "kubectl-epinio"),
+	}, nil
 }
 
-// cmdExecPath returns the path to the kubectl-epinio command binary.
-func cmdExecPath(t *testing.T) string {
-	return path.Join(getGitRepoRoot(t), "output", "kubectl-epinio")
+func (e *KubectlEpinio) Run(args ...string) (string, string, error) {
+	cmd := exec.Command(e.binPath, args...)
+
+	outBuff, errBuff := &bytes.Buffer{}, &bytes.Buffer{}
+	cmd.Stdout = outBuff
+	cmd.Stderr = errBuff
+
+	err := cmd.Run()
+	return outBuff.String(), errBuff.String(), err
+}
+
+func (e *KubectlEpinio) Create(resource string, args ...string) (string, string, error) {
+	args = append([]string{"create", resource}, args...)
+	return e.Run(args...)
+}
+
+func (e *KubectlEpinio) Get(resource string, args ...string) (string, string, error) {
+	args = append([]string{"get", resource}, args...)
+	return e.Run(args...)
+}
+
+func (e *KubectlEpinio) Delete(resource string, args ...string) (string, string, error) {
+	args = append([]string{"delete", resource}, args...)
+	return e.Run(args...)
+}
+
+func parseOutTable(out string) [][]string {
+	outTable := [][]string{}
+
+	out = strings.TrimSpace(out)
+	rows := strings.Split(out, "\n")
+
+	for _, row := range rows {
+		rowCells := strings.FieldsFunc(row, func(r rune) bool {
+			return r == '\t'
+		})
+
+		outTable = append(outTable, rowCells)
+
+	}
+	return outTable
+}
+
+func setup() {
+	// Do something here.
+	fmt.Printf("\033[1;33m%s\033[0m", "> Setup completed\n")
+}
+
+func teardown() {
+	// Do something here.
+	fmt.Printf("\033[1;33m%s\033[0m", "> Teardown completed")
+	fmt.Printf("\n")
+}
+
+func TestMain(m *testing.M) {
+	setup()
+	code := m.Run()
+	teardown()
+	os.Exit(code)
 }
