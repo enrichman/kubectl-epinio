@@ -35,7 +35,7 @@ func TestGetRoles(t *testing.T) {
 				assert.NoError(t, err)
 
 				outTable := parseOutTable(stdout)
-				assert.True(t, len(outTable) > 0)
+				assert.Equal(t, len(tc.expectedEntries), len(outTable), outTable)
 
 				for i, rowCells := range outTable {
 					assert.Equal(t, len(tc.expectedEntries[i]), len(rowCells))
