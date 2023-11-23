@@ -36,7 +36,7 @@ func (e *EpinioCLI) GetUsers(ctx context.Context, usernames []string) error {
 		return err
 	}
 
-	users = filterUsers(usernames, users)
+	users = filterAndSortUsers(usernames, users)
 
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 2, '\t', 0)
@@ -67,7 +67,7 @@ func (e *EpinioCLI) DescribeUsers(ctx context.Context, usernames []string) error
 		return err
 	}
 
-	users = filterUsers(usernames, users)
+	users = filterAndSortUsers(usernames, users)
 
 	format := "%-15s %s\n"
 
@@ -90,7 +90,7 @@ func (e *EpinioCLI) DescribeRoles(ctx context.Context, ids []string) error {
 		return err
 	}
 
-	roles = filterRoles(ids, roles)
+	roles = filterAndSortRoles(ids, roles)
 
 	format := "%-15s %s\n"
 
@@ -107,7 +107,8 @@ func (e *EpinioCLI) DescribeRoles(ctx context.Context, ids []string) error {
 	return nil
 }
 
-func filterUsers(usernames []string, users []epinio.User) []epinio.User {
+func filterAndSortUsers(usernames []string, users []epinio.User) []epinio.User {
+	// if usernames are not specified sort and return all
 	if len(usernames) == 0 {
 		slices.SortFunc(users, func(i, j epinio.User) int {
 			return strings.Compare(i.Username, j.Username)
@@ -115,15 +116,19 @@ func filterUsers(usernames []string, users []epinio.User) []epinio.User {
 		return users
 	}
 
-	usernamesMap := map[string]struct{}{}
-	for _, u := range usernames {
-		usernamesMap[u] = struct{}{}
+	return filterUsers(usernames, users)
+}
+
+func filterUsers(usernames []string, users []epinio.User) []epinio.User {
+	usersMap := map[string]epinio.User{}
+	for _, u := range users {
+		usersMap[u.Username] = u
 	}
 
 	filtered := []epinio.User{}
-	for _, user := range users {
-		if _, found := usernamesMap[user.Username]; found {
-			filtered = append(filtered, user)
+	for _, username := range usernames {
+		if _, found := usersMap[username]; found {
+			filtered = append(filtered, usersMap[username])
 		}
 	}
 	return filtered

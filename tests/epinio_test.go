@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path"
@@ -75,13 +76,45 @@ func parseOutTable(out string) [][]string {
 	return outTable
 }
 
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func RandStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
 func setup() {
-	// Do something here.
+	_ = exec.Command(
+		"kubectl", "delete", "secrets",
+		"-n", "epinio",
+		"-l", "epinio.io/api-user-credentials",
+	).Run()
+
+	_ = exec.Command(
+		"kubectl", "delete", "configmaps",
+		"-n", "epinio",
+		"-l", "epinio.io/role",
+	).Run()
+
 	fmt.Printf("\033[1;33m%s\033[0m", "> Setup completed\n")
 }
 
 func teardown() {
-	// Do something here.
+	_ = exec.Command(
+		"kubectl", "delete", "secrets",
+		"-n", "epinio",
+		"-l", "epinio.io/api-user-credentials",
+	).Run()
+
+	_ = exec.Command(
+		"kubectl", "delete", "configmaps",
+		"-n", "epinio",
+		"-l", "epinio.io/role",
+	).Run()
+
 	fmt.Printf("\033[1;33m%s\033[0m", "> Teardown completed")
 	fmt.Printf("\n")
 }

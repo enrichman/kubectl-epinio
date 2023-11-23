@@ -7,11 +7,18 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetUser(t *testing.T) {
 	epinio, err := NewKubectlEpinio()
 	assert.NoError(t, err)
+
+	admin1 := createUser(t, epinio, "admin01", []string{"admin"})
+	admin2 := createUser(t, epinio, "admin02", []string{"admin"})
+	user1 := createUser(t, epinio, "user01", []string{"user"})
+	user2 := createUser(t, epinio, "user02", []string{"admin:workspace", "user"})
+	user3 := createUser(t, epinio, "user03", nil)
 
 	testCases := []struct {
 		name            string
@@ -24,27 +31,19 @@ func TestGetUser(t *testing.T) {
 			args: []string{},
 			expectedEntries: [][]interface{}{
 				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"admin", true, 1, ""},
-				{"admin@epinio.io", true, 1, ""},
-				{"epinio", false, 1, ""},
-			},
-		},
-		{
-			name: "get all users",
-			args: []string{},
-			expectedEntries: [][]interface{}{
-				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"admin", true, 1, ""},
-				{"admin@epinio.io", true, 1, ""},
-				{"epinio", false, 1, ""},
+				{admin1, true, 1, ""},
+				{admin2, true, 1, ""},
+				{user1, false, 1, ""},
+				{user2, false, 2, ""},
+				{user3, false, 0, ""},
 			},
 		},
 		{
 			name: "get single user with exact match",
-			args: []string{"epinio"},
+			args: []string{user1},
 			expectedEntries: [][]interface{}{
 				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"epinio", false, 1, ""},
+				{user1, false, 1, ""},
 			},
 		},
 		{
@@ -56,19 +55,19 @@ func TestGetUser(t *testing.T) {
 		},
 		{
 			name: "get multiple users with exact matches",
-			args: []string{"epinio", "admin"},
+			args: []string{user1, admin1},
 			expectedEntries: [][]interface{}{
 				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"epinio", false, 1, ""},
-				{"admin", true, 1, ""},
+				{user1, false, 1, ""},
+				{admin1, true, 1, ""},
 			},
 		},
 		{
 			name: "get multiple users with single exact match",
-			args: []string{"epinio", "nothere"},
+			args: []string{user1, "nothere"},
 			expectedEntries: [][]interface{}{
 				{"USERNAME", "ADMIN", "ROLES", "AGE"},
-				{"epinio", false, 1, ""},
+				{user1, false, 1, ""},
 			},
 		},
 	}
@@ -80,7 +79,7 @@ func TestGetUser(t *testing.T) {
 				assert.NoError(t, err)
 
 				outTable := parseOutTable(stdout)
-				assert.True(t, len(outTable) > 0)
+				assert.Equal(t, len(tc.expectedEntries), len(outTable), outTable)
 
 				for i, rowCells := range outTable {
 					assert.Equal(t, len(tc.expectedEntries[i]), len(rowCells))
@@ -121,4 +120,19 @@ func TestGetUser(t *testing.T) {
 			})
 		}
 	}
+}
+
+func createUser(t *testing.T, epinio *KubectlEpinio, namePrefix string, roles []string) string {
+	t.Helper()
+
+	name := fmt.Sprintf("epinio-user-%s-%s", namePrefix, RandStringBytes(5))
+	args := []string{name}
+
+	for _, r := range roles {
+		args = append(args, "--roles", r)
+	}
+	_, _, err := epinio.Create("user", args...)
+	require.NoError(t, err)
+
+	return name
 }
