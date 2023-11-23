@@ -45,6 +45,11 @@ func (e *EpinioCLI) EditUser(ctx context.Context, username string) error {
 		return err
 	}
 
+	updatedUser.Password, err = hashPasswordIfNeeded(updatedUser.Password)
+	if err != nil {
+		return err
+	}
+
 	return e.KubeClient.UpdateUser(ctx, updatedUser)
 }
 

@@ -4,7 +4,7 @@ import "time"
 
 type User struct {
 	Username          string `yaml:"username"`
-	Password          string
+	Password          string `yaml:"password"`
 	Namespaces        []string
 	Role              string
 	Roles             []string
